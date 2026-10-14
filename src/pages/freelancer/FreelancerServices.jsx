@@ -6,6 +6,7 @@ import { formatCurrency } from '../../utils/formatters';
 import { Plus, Star, Edit, Trash2, Eye } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
 import { getImageUrl, handleImageError } from '../../utils/imageHelper';
@@ -173,24 +174,16 @@ const FreelancerServices = () => {
       </div>
 
       {/* Delete Confirmation Modal */}
-      {serviceToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <Card className="w-full max-w-md p-6">
-            <h3 className="text-lg font-bold text-slate-900 mb-2">Delete Service?</h3>
-            <p className="text-slate-600 mb-6">
-              Are you sure you want to delete <span className="font-semibold text-slate-800">"{serviceToDelete.title}"</span>? This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setServiceToDelete(null)} disabled={isDeleting}>
-                Cancel
-              </Button>
-              <Button variant="danger" onClick={confirmDelete} disabled={isDeleting}>
-                {isDeleting ? 'Deleting...' : 'Yes, Delete'}
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={Boolean(serviceToDelete)}
+        onClose={() => setServiceToDelete(null)}
+        onConfirm={confirmDelete}
+        title="Delete Service Listing?"
+        message={`Are you sure you want to delete "${serviceToDelete?.title}"? This will remove the listing from marketplace searches.`}
+        confirmText="Yes, Delete Listing"
+        variant="danger"
+        isLoading={isDeleting}
+      />
     </div>
   );
 };

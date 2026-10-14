@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { formatCurrency, formatDate } from '../../utils/formatters';
-import { MapPin, Calendar, Star, Clock, CheckCircle, MessageSquare, ShieldCheck } from 'lucide-react';
+import { formatDate } from '../../utils/formatters';
+import { MapPin, Calendar, Star, CheckCircle, ShieldCheck } from 'lucide-react';
 import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
+import Avatar from '../../components/common/Avatar';
+import ServiceCard from '../../components/marketplace/ServiceCard';
+import EmptyState from '../../components/common/EmptyState';
 import TrustMetricsCard from '../../components/trust/TrustMetricsCard';
 import { userService } from '../../services/userService';
 import { statsService } from '../../services/statsService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { getImageUrl, handleImageError } from '../../utils/imageHelper';
 
 const FreelancerProfilePage = () => {
   const { id } = useParams();
@@ -17,7 +18,7 @@ const FreelancerProfilePage = () => {
   const [freelancerReviews, setFreelancerReviews] = useState([]);
   const [trustMetrics, setTrustMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('services'); // 'services', 'reviews', 'trust'
+  const [activeTab, setActiveTab] = useState('services');
 
   useEffect(() => {
     let isMounted = true;
@@ -33,8 +34,8 @@ const FreelancerProfilePage = () => {
 
         if (isMounted) {
           setFreelancer(u);
-          setFreelancerServices(s);
-          setFreelancerReviews(r);
+          setFreelancerServices(s || []);
+          setFreelancerReviews(r || []);
           setTrustMetrics(t);
         }
       } catch (err) {
@@ -58,37 +59,43 @@ const FreelancerProfilePage = () => {
 
   if (!freelancer) {
     return (
-      <div className="p-12 text-center">
-        <h2 className="text-xl font-bold text-slate-800">Freelancer not found</h2>
-        <Link to="/services" className="mt-4 inline-block text-indigo-600 font-semibold">
-          ← Browse Marketplace Services
-        </Link>
+      <div className="p-12 text-center max-w-lg mx-auto">
+        <EmptyState
+          title="Freelancer not found"
+          description="The profile you are trying to view does not exist or may have been deactivated."
+          action={
+            <Link to="/services" className="text-sm font-semibold text-[#2F5BEA] hover:underline">
+              ← Browse Marketplace Services
+            </Link>
+          }
+        />
       </div>
     );
   }
 
+  const memberYear = freelancer.createdAt 
+    ? new Date(freelancer.createdAt).getFullYear() 
+    : 2026;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Profile Header Card */}
-      <Card className="p-6 md:p-8 overflow-hidden relative">
+      <Card className="p-6 md:p-8 overflow-hidden relative border border-slate-200/90 shadow-sm">
         <div className="flex flex-col md:flex-row items-center md:items-start space-y-4 md:space-y-0 md:space-x-6 text-center md:text-left">
-          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-indigo-50 border-4 border-white shadow-md overflow-hidden flex items-center justify-center shrink-0">
-            <img
-              src={getImageUrl(freelancer.profileImage || freelancer.avatar, 'avatar')}
-              alt={freelancer.name}
-              onError={(e) => handleImageError(e, 'avatar')}
-              className="w-full h-full object-cover"
-            />
-          </div>
+          <Avatar 
+            src={freelancer.profileImage || freelancer.avatar} 
+            name={freelancer.name} 
+            size="2xl" 
+          />
 
           <div className="flex-1 space-y-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center justify-center md:justify-start gap-2">
-                  {freelancer.name}
-                  <CheckCircle className="w-5 h-5 text-indigo-600" />
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 flex items-center justify-center md:justify-start gap-2">
+                  <span>{freelancer.name}</span>
+                  <CheckCircle className="w-5 h-5 text-[#2F5BEA]" />
                 </h1>
-                <p className="text-base text-slate-600 font-medium">{freelancer.title || 'Specialist'}</p>
+                <p className="text-sm sm:text-base text-slate-600 font-medium">{freelancer.title || 'Independent Professional'}</p>
               </div>
 
               {trustMetrics && (
@@ -102,18 +109,18 @@ const FreelancerProfilePage = () => {
               )}
             </div>
 
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-sm text-slate-500 pt-1">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-xs sm:text-sm text-slate-500 pt-1">
               {freelancer.location && (
                 <span className="flex items-center">
-                  <MapPin size={16} className="mr-1 text-slate-400" /> {freelancer.location}
+                  <MapPin size={15} className="mr-1 text-slate-400" /> {freelancer.location}
                 </span>
               )}
               <span className="flex items-center text-amber-500 font-semibold">
-                <Star size={16} fill="currentColor" className="mr-1" />
-                {freelancer.rating || 5.0} ({freelancerReviews.length} reviews)
+                <Star size={15} className="fill-amber-400 text-amber-400 mr-1" />
+                {freelancer.rating ? Number(freelancer.rating).toFixed(1) : 'New'} ({freelancerReviews.length} reviews)
               </span>
               <span className="flex items-center">
-                <Calendar size={16} className="mr-1 text-slate-400" /> Member since {new Date(freelancer.createdAt || Date.now()).getFullYear()}
+                <Calendar size={15} className="mr-1 text-slate-400" /> Member since {memberYear}
               </span>
             </div>
           </div>
@@ -124,13 +131,13 @@ const FreelancerProfilePage = () => {
       {trustMetrics && <TrustMetricsCard metrics={trustMetrics} />}
 
       {/* Tabs */}
-      <div className="border-b border-slate-200 flex gap-4 text-sm font-semibold">
+      <div className="border-b border-slate-200 flex gap-6 text-xs sm:text-sm font-semibold">
         <button
           onClick={() => setActiveTab('services')}
           className={`pb-3 border-b-2 transition-colors ${
             activeTab === 'services'
-              ? 'border-indigo-600 text-indigo-600'
-              : 'border-transparent text-slate-500 hover:text-slate-700'
+              ? 'border-[#2F5BEA] text-[#2F5BEA]'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
           Services ({freelancerServices.length})
@@ -139,8 +146,8 @@ const FreelancerProfilePage = () => {
           onClick={() => setActiveTab('reviews')}
           className={`pb-3 border-b-2 transition-colors ${
             activeTab === 'reviews'
-              ? 'border-indigo-600 text-indigo-600'
-              : 'border-transparent text-slate-500 hover:text-slate-700'
+              ? 'border-[#2F5BEA] text-[#2F5BEA]'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
           Reviews ({freelancerReviews.length})
@@ -149,8 +156,8 @@ const FreelancerProfilePage = () => {
           onClick={() => setActiveTab('about')}
           className={`pb-3 border-b-2 transition-colors ${
             activeTab === 'about'
-              ? 'border-indigo-600 text-indigo-600'
-              : 'border-transparent text-slate-500 hover:text-slate-700'
+              ? 'border-[#2F5BEA] text-[#2F5BEA]'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
           }`}
         >
           About & Skills
@@ -159,36 +166,18 @@ const FreelancerProfilePage = () => {
 
       {/* Tab Content */}
       {activeTab === 'services' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div>
           {freelancerServices.length === 0 ? (
-            <p className="col-span-3 text-center py-12 text-slate-400">No active services offered currently.</p>
+            <EmptyState
+              title="No services offered currently"
+              description="This freelancer does not have any active service listings published at the moment."
+            />
           ) : (
-            freelancerServices.map((service) => (
-              <Card key={service.id || service._id} className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col group">
-                <Link to={`/services/${service.id || service._id}`} className="h-44 bg-slate-200 block overflow-hidden relative">
-                  <img
-                    src={getImageUrl(service.image, 'service')}
-                    alt={service.title}
-                    onError={(e) => handleImageError(e, 'service')}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                </Link>
-                <div className="p-5 flex-1 flex flex-col justify-between">
-                  <div>
-                    <Link to={`/services/${service.id || service._id}`}>
-                      <h4 className="font-bold text-slate-900 hover:text-indigo-600 line-clamp-2 text-base transition-colors">
-                        {service.title}
-                      </h4>
-                    </Link>
-                    <p className="text-xs text-slate-500 line-clamp-2 mt-1.5">{service.description}</p>
-                  </div>
-                  <div className="flex justify-between items-center mt-4 pt-3 border-t border-slate-100">
-                    <span className="text-xs text-slate-500">{service.deliveryDays || 7} days delivery</span>
-                    <span className="font-black text-slate-900 text-base">{formatCurrency(service.price)}</span>
-                  </div>
-                </div>
-              </Card>
-            ))
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {freelancerServices.map((service) => (
+                <ServiceCard key={service.id || service._id} service={service} />
+              ))}
+            </div>
           )}
         </div>
       )}
@@ -196,20 +185,29 @@ const FreelancerProfilePage = () => {
       {activeTab === 'reviews' && (
         <div className="space-y-4">
           {freelancerReviews.length === 0 ? (
-            <p className="text-center py-12 text-slate-400">No reviews on completed deals yet.</p>
+            <EmptyState
+              title="No reviews yet"
+              description="This freelancer has not received client reviews yet."
+            />
           ) : (
             freelancerReviews.map((rev) => (
-              <Card key={rev.id || rev._id} className="p-6">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="font-bold text-slate-900">{rev.client?.name || rev.reviewerName || 'Client'}</span>
-                  <div className="flex text-amber-400">
-                    {Array.from({ length: rev.rating || 5 }).map((_, i) => (
-                      <Star key={i} size={16} fill="currentColor" />
-                    ))}
+              <Card key={rev.id || rev._id} className="p-5 border border-slate-200/80">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2.5">
+                    <Avatar name={rev.client?.name || rev.reviewerName || 'Client'} size="sm" />
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">{rev.client?.name || rev.reviewerName || 'Client'}</p>
+                      <p className="text-[10px] text-slate-400">{formatDate(rev.createdAt)}</p>
+                    </div>
+                  </div>
+                  <div className="flex text-amber-500 text-xs font-bold">
+                    <Star size={13} className="fill-amber-400 text-amber-400 mr-1" />
+                    <span>{rev.rating || 5}.0</span>
                   </div>
                 </div>
-                <p className="text-sm text-slate-700 italic">"{rev.comment}"</p>
-                <p className="text-xs text-slate-400 mt-2">{formatDate(rev.createdAt)}</p>
+                <p className="text-xs text-slate-700 leading-relaxed italic mt-2">
+                  "{rev.comment || 'Project successfully approved.'}"
+                </p>
               </Card>
             ))
           )}
@@ -218,17 +216,17 @@ const FreelancerProfilePage = () => {
 
       {activeTab === 'about' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="p-6 md:col-span-2">
-            <h3 className="font-bold text-slate-900 text-lg mb-3">Professional Bio</h3>
-            <p className="text-slate-600 leading-relaxed text-sm whitespace-pre-line">
+          <Card className="p-6 md:col-span-2 border border-slate-200/80">
+            <h3 className="font-bold text-slate-900 text-base mb-3">Professional Bio</h3>
+            <p className="text-slate-600 leading-relaxed text-xs sm:text-sm whitespace-pre-line">
               {freelancer.bio || 'Verified freelance professional delivering high quality milestone projects on WorkVault.'}
             </p>
           </Card>
 
-          <Card className="p-6">
-            <h3 className="font-bold text-slate-900 text-base mb-3">Core Skills</h3>
+          <Card className="p-6 border border-slate-200/80">
+            <h3 className="font-bold text-slate-900 text-sm mb-3">Core Skills</h3>
             <div className="flex flex-wrap gap-2">
-              {(freelancer.skills || ['React', 'Node.js', 'UI/UX']).map((skill, i) => (
+              {(freelancer.skills && freelancer.skills.length > 0 ? freelancer.skills : ['Freelancer']).map((skill, i) => (
                 <span key={i} className="px-2.5 py-1 bg-slate-100 text-slate-700 text-xs font-semibold rounded-lg border border-slate-200">
                   {skill}
                 </span>

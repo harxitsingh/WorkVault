@@ -83,8 +83,8 @@ const EditService = () => {
           setTags(service.tags || []);
           setImageUrl(service.image || '');
         }
-      } catch (error) {
-        toast.error('Service not found or inaccessible');
+      } catch (err) {
+        toast.error(err.message || 'Service not found or inaccessible');
         navigate('/freelancer/services');
       } finally {
         setIsLoading(false);
