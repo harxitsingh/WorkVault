@@ -61,11 +61,7 @@ export const statsService = {
         : categoryOrField;
       formData.append('category', category);
 
-      const response = await api.post('/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      const response = await api.post('/upload', formData);
       const data = response.data.data;
       if (data) {
         data.url = data.fullUrl || data.url || data.fileUrl;

@@ -111,6 +111,19 @@ export default function ClientSettings() {
                     </label>
                   </div>
                 ))}
+
+                <div className="pt-4 border-t border-gray-100">
+                  <button
+                    onClick={() => {
+                      const uid = user?.id || user?._id || 'me';
+                      localStorage.setItem(`workvault_client_notifications_${uid}`, JSON.stringify({ updated: Date.now() }));
+                      toast.success('Notification preferences saved successfully');
+                    }}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+                  >
+                    Save Preferences
+                  </button>
+                </div>
               </div>
             </div>
           )}

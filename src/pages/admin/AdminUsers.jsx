@@ -140,14 +140,12 @@ export default function AdminUsers() {
                       {formatDate(u.createdAt)}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      {u.role === 'freelancer' && (
-                        <Link
-                          to={`/freelancer/${u.id || u._id}`}
-                          className="text-xs font-semibold text-indigo-600 hover:underline"
-                        >
-                          View Profile
-                        </Link>
-                      )}
+                      <Link
+                        to={`/admin/users/${u.id || u._id}`}
+                        className="text-xs font-semibold text-indigo-600 hover:underline"
+                      >
+                        View Details
+                      </Link>
                     </td>
                   </tr>
                 ))}

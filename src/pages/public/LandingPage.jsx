@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Handshake, Shield, CheckCircle, BadgeCheck, Eye, ArrowRight, CreditCard, Code, Palette, PenTool, Smartphone, TrendingUp, Film, FileText, Wallet, Star } from 'lucide-react';
 import Button from '../../components/common/Button';
 import ServiceCard from '../../components/marketplace/ServiceCard';
 import { categories, testimonials } from '../../data/categories';
-import services from '../../data/services';
+import staticServices from '../../data/services';
+import { serviceService } from '../../services/serviceService';
 
 const categoryIconMap = {
   Code,
@@ -17,6 +18,22 @@ const categoryIconMap = {
 };
 
 const LandingPage = () => {
+  const [featuredServices, setFeaturedServices] = useState(staticServices.slice(0, 6));
+
+  useEffect(() => {
+    let isMounted = true;
+    serviceService.getServices({ limit: 6 })
+      .then(res => {
+        if (!isMounted) return;
+        const list = Array.isArray(res) ? res : res?.services || [];
+        if (list.length > 0) {
+          setFeaturedServices(list);
+        }
+      })
+      .catch(() => {});
+
+    return () => { isMounted = false; };
+  }, []);
   return (
     <div className="flex flex-col">
       {/* 1. HERO SECTION */}
@@ -169,8 +186,8 @@ const LandingPage = () => {
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {services.slice(0, 6).map(service => (
-              <ServiceCard key={service.id} service={service} />
+            {featuredServices.map(service => (
+              <ServiceCard key={service.id || service._id} service={service} />
             ))}
           </div>
           

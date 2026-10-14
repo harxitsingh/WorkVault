@@ -56,7 +56,7 @@ const DashboardHeader = ({ title, subtitle }) => {
             </Link>
             
             <Link to={user?.role ? `/${user.role}/profile` : '/login'} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <Avatar src={user?.avatar} alt={user?.name} size="sm" />
+              <Avatar src={user?.avatar || user?.profileImage} name={user?.name} size="sm" />
               <div className="hidden sm:block text-left">
                 <p className="text-sm font-medium text-gray-700 leading-none">{user?.name}</p>
               </div>

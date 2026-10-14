@@ -66,7 +66,7 @@ const Navbar = () => {
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                   className="flex items-center gap-2 hover:opacity-80 transition-opacity focus:outline-none"
                 >
-                  <Avatar src={user.avatar} alt={user.name} size="sm" />
+                  <Avatar src={user.avatar || user.profileImage} name={user.name} size="sm" />
                 </button>
 
                 {isDropdownOpen && (

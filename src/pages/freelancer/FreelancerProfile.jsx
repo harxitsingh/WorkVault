@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../context/AuthContext';
 import { userService } from '../../services/userService';
@@ -14,8 +14,12 @@ import { getImageUrl, handleImageError } from '../../utils/imageHelper';
 
 const FreelancerProfile = () => {
   const { user, updateUserState } = useAuth();
+  const fileInputRef = useRef(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [tagInput, setTagInput] = useState('');
   const [skills, setSkills] = useState(user?.skills || []);
   const [myServices, setMyServices] = useState([]);
@@ -74,6 +78,59 @@ const FreelancerProfile = () => {
     setSkills(skills.filter((_, index) => index !== indexToRemove));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Only JPG, PNG, and WEBP image formats are supported.');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be 5MB or less.');
+      return;
+    }
+
+    if (avatarPreview) {
+      URL.revokeObjectURL(avatarPreview);
+    }
+
+    setSelectedFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  };
+
+  const handleCancelAvatar = () => {
+    if (avatarPreview) {
+      URL.revokeObjectURL(avatarPreview);
+    }
+    setAvatarPreview(null);
+    setSelectedFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleSaveAvatar = async () => {
+    if (!selectedFile) return;
+    setUploadingAvatar(true);
+    try {
+      const uploadRes = await statsService.uploadFile(selectedFile, 'avatar');
+      const newUrl = uploadRes.url || uploadRes.fileUrl;
+      const userId = user?.id || user?._id || 'me';
+      const updatedUser = await userService.updateUser(userId, {
+        avatar: newUrl,
+        profileImage: newUrl
+      });
+      updateUserState(updatedUser);
+      toast.success('Profile photo updated successfully!');
+      handleCancelAvatar();
+    } catch (err) {
+      toast.error(err.message || 'Failed to upload photo');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const onSubmit = async (data) => {
     setIsSaving(true);
     try {
@@ -107,15 +164,59 @@ const FreelancerProfile = () => {
           <div className="flex flex-col sm:flex-row sm:items-end justify-between -mt-12 sm:-mt-16 mb-4 sm:mb-0">
             <div className="flex flex-col sm:flex-row items-center sm:items-end space-y-4 sm:space-y-0 sm:space-x-4">
               <div className="relative group">
-                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white bg-white overflow-hidden shadow-md">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white bg-white overflow-hidden shadow-md relative">
                   <img
-                    src={getImageUrl(user?.avatar || user?.profileImage, 'avatar')}
+                    src={avatarPreview || getImageUrl(user?.avatar || user?.profileImage, 'avatar')}
                     alt={user?.name || 'User'}
                     onError={(e) => handleImageError(e, 'avatar')}
                     className="w-full h-full object-cover"
                   />
+                  {uploadingAvatar && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-xs font-semibold">
+                      Saving...
+                    </div>
+                  )}
                 </div>
+
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingAvatar}
+                  className="absolute bottom-0 right-0 p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg border-2 border-white transition-transform hover:scale-110"
+                  title="Change profile photo"
+                >
+                  <Camera size={16} />
+                </button>
               </div>
+
+              {avatarPreview && (
+                <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                  <button
+                    type="button"
+                    onClick={handleSaveAvatar}
+                    disabled={uploadingAvatar}
+                    className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm"
+                  >
+                    {uploadingAvatar ? 'Uploading...' : 'Save Photo'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelAvatar}
+                    disabled={uploadingAvatar}
+                    className="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
               
               <div className="text-center sm:text-left pb-2">
                 <h1 className="text-2xl font-bold text-slate-900">{user?.name || 'Freelancer'}</h1>

@@ -59,12 +59,26 @@ export const adminService = {
     }
   },
 
-  updateUserStatus: async (userId, data) => {
+  getUserById: async (userId) => {
     try {
-      const response = await api.put(`/users/${userId}`, data);
+      const response = await api.get(`/users/${userId}`);
       return response.data.data;
     } catch (error) {
-      throw new Error(getErrorMessage(error, 'Failed to update user'));
+      throw new Error(getErrorMessage(error, 'Failed to fetch user details'));
+    }
+  },
+
+  updateUserStatus: async (userId, data) => {
+    try {
+      const response = await api.put(`/admin/users/${userId}/status`, data);
+      return response.data.data;
+    } catch (error) {
+      try {
+        const response = await api.put(`/users/${userId}`, data);
+        return response.data.data;
+      } catch (err) {
+        throw new Error(getErrorMessage(err, 'Failed to update user status'));
+      }
     }
   }
 };

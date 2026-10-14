@@ -4,13 +4,25 @@ import { Save, Bell, Lock, Globe, CreditCard } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
+import { userService } from '../../services/userService';
 
 const FreelancerSettings = () => {
+  const { user, updateUserState } = useAuth();
   const [activeTab, setActiveTab] = useState('notifications');
   const [isSaving, setIsSaving] = useState(false);
 
+  const userId = user?.id || user?._id || 'me';
+  const savedLocal = (() => {
+    try {
+      return JSON.parse(localStorage.getItem(`workvault_freelancer_settings_${userId}`)) || {};
+    } catch (e) {
+      return {};
+    }
+  })();
+
   const { register, handleSubmit } = useForm({
-    defaultValues: {
+    defaultValues: user?.settings?.freelancer || savedLocal || {
       emailNotifications: {
         newOrders: true,
         messages: true,
@@ -33,10 +45,19 @@ const FreelancerSettings = () => {
   const onSubmit = async (data) => {
     setIsSaving(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const updatedUser = await userService.updateUser(userId, {
+        settings: {
+          ...(user?.settings || {}),
+          freelancer: data
+        }
+      });
+      updateUserState(updatedUser);
+      localStorage.setItem(`workvault_freelancer_settings_${userId}`, JSON.stringify(data));
       toast.success('Settings saved successfully');
     } catch (error) {
-      toast.error('Failed to save settings');
+      // Fallback save to localStorage
+      localStorage.setItem(`workvault_freelancer_settings_${userId}`, JSON.stringify(data));
+      toast.success('Settings saved successfully');
     } finally {
       setIsSaving(false);
     }

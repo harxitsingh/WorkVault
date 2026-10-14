@@ -6,13 +6,38 @@ export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState('general');
   const [loading, setLoading] = useState(false);
 
+  const [settings, setSettings] = useState(() => {
+    try {
+      const saved = localStorage.getItem('workvault_admin_settings');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      platformFee: 10,
+      maintenanceMode: false,
+      allowRegistrations: true,
+      maxUploadSize: 50,
+      sessionTimeout: 120,
+      strictPassword: true,
+      notifyNewUsers: true,
+      notifyNewDisputes: true,
+      notifyLargeTx: true,
+      notifySystemAlerts: true
+    };
+  });
+
   const handleSave = (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    try {
+      localStorage.setItem('workvault_admin_settings', JSON.stringify(settings));
+      setTimeout(() => {
+        setLoading(false);
+        toast.success('Platform settings saved successfully and persisted!');
+      }, 400);
+    } catch (err) {
       setLoading(false);
-      toast.success('Settings saved successfully!');
-    }, 800);
+      toast.error('Failed to save settings');
+    }
   };
 
   return (

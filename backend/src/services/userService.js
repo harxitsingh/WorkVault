@@ -47,11 +47,16 @@ export const updateUser = async (id, updates, requesterId) => {
     throw error;
   }
 
-  const allowedFields = ['name', 'bio', 'skills', 'avatar', 'profileImage', 'title', 'location', 'phone', 'company', 'portfolioUrl'];
+  const allowedFields = ['name', 'bio', 'skills', 'avatar', 'profileImage', 'title', 'location', 'phone', 'company', 'portfolioUrl', 'settings'];
   for (const key of allowedFields) {
     if (updates[key] !== undefined) {
       user[key] = updates[key];
     }
+  }
+  if (updates.avatar && !updates.profileImage) user.profileImage = updates.avatar;
+  if (updates.profileImage && !updates.avatar) user.avatar = updates.profileImage;
+  if (requester?.role === 'admin' && updates.status !== undefined) {
+    user.status = updates.status;
   }
 
   await user.save();
