@@ -5,10 +5,11 @@ import { reviewService } from '../../services/reviewService';
 import { formatRelativeTime } from '../../utils/formatters';
 import { Star, MessageSquare } from 'lucide-react';
 import Card from '../../components/common/Card';
+import Avatar from '../../components/common/Avatar';
+import EmptyState from '../../components/common/EmptyState';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-import { getImageUrl, handleImageError } from '../../utils/imageHelper';
 
-const FreelancerReviews = () => {
+export default function FreelancerReviews() {
   const { user } = useAuth();
   const [reviewsList, setReviewsList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +25,6 @@ const FreelancerReviews = () => {
       }
       try {
         setLoading(true);
-        // Try userService first, fallback to reviewService
         let data = await userService.getUserReviews(userId).catch(() => []);
         if (!data || data.length === 0) {
           data = await reviewService.getReviewsByUser(userId).catch(() => []);
@@ -66,9 +66,9 @@ const FreelancerReviews = () => {
     return Array.from({ length: 5 }).map((_, i) => (
       <Star 
         key={i} 
-        size={16} 
+        size={14} 
         fill={i < Math.floor(rating) ? "currentColor" : "none"} 
-        className={i < Math.floor(rating) ? "text-yellow-400" : "text-slate-300"}
+        className={i < Math.floor(rating) ? "text-amber-400" : "text-slate-200"}
       />
     ));
   };
@@ -82,43 +82,43 @@ const FreelancerReviews = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Client Reviews & Feedback</h1>
-        <p className="text-slate-500">See what clients have rated and written about your completed projects.</p>
+        <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Client Reviews & Reputation</h1>
+        <p className="text-sm text-slate-500 mt-1">Verified ratings and comments received from completed milestone deliverables.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Rating Summary */}
-        <Card className="p-6 md:col-span-1 flex flex-col justify-center items-center text-center">
-          <p className="text-slate-500 font-medium mb-2 text-sm">Overall Client Rating</p>
-          <div className="text-5xl font-black text-slate-900 mb-3">{averageRating}</div>
-          <div className="flex items-center justify-center space-x-1 mb-2 text-yellow-400">
+        <Card className="p-6 md:col-span-1 flex flex-col justify-center items-center text-center border border-slate-200 shadow-xs">
+          <p className="text-xs uppercase font-bold text-slate-400 tracking-wider mb-2">Overall Score</p>
+          <div className="text-5xl font-black text-slate-900 mb-2">{averageRating}</div>
+          <div className="flex items-center justify-center space-x-1 mb-2 text-amber-400">
             {renderStars(Number(averageRating))}
           </div>
-          <p className="text-slate-500 text-xs font-medium">Based on {totalReviews} verified client reviews</p>
+          <p className="text-xs text-slate-500">Based on {totalReviews} client reviews</p>
         </Card>
 
         {/* Rating Distribution */}
-        <Card className="p-6 md:col-span-2">
-          <h3 className="font-bold text-slate-900 mb-4 text-sm uppercase tracking-wider">Rating Distribution</h3>
-          <div className="space-y-3">
+        <Card className="p-6 md:col-span-2 border border-slate-200 shadow-xs">
+          <h3 className="font-bold text-slate-900 mb-4 text-xs uppercase tracking-wider">Rating Breakdown</h3>
+          <div className="space-y-2.5">
             {[5, 4, 3, 2, 1].map(stars => {
               const count = ratingCounts[stars];
               const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
               return (
-                <div key={stars} className="flex items-center text-sm">
-                  <div className="flex items-center w-20">
-                    <span className="font-medium mr-1.5">{stars}</span>
-                    <Star size={14} className="text-yellow-400" fill="currentColor" />
+                <div key={stars} className="flex items-center text-xs">
+                  <div className="flex items-center w-16 text-slate-600 font-semibold">
+                    <span className="mr-1">{stars}</span>
+                    <Star size={12} className="text-amber-400 fill-amber-400" />
                   </div>
-                  <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden mx-4">
+                  <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden mx-3">
                     <div 
-                      className="h-full bg-yellow-400 rounded-full transition-all"
+                      className="h-full bg-amber-400 rounded-full transition-all duration-300"
                       style={{ width: `${percentage}%` }}
-                    ></div>
+                    />
                   </div>
-                  <div className="w-12 text-right text-slate-500 text-xs">{count}</div>
+                  <div className="w-8 text-right text-slate-400 font-bold">{count}</div>
                 </div>
               );
             })}
@@ -127,15 +127,15 @@ const FreelancerReviews = () => {
       </div>
 
       {/* Reviews List */}
-      <Card className="overflow-hidden">
-        <div className="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-          <h2 className="text-base font-bold text-slate-900">All Reviews ({sortedReviews.length})</h2>
-          <div className="flex items-center space-x-2 text-sm">
-            <span className="text-slate-500 text-xs">Sort by:</span>
+      <Card className="overflow-hidden border border-slate-200 shadow-xs">
+        <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-wrap justify-between items-center bg-slate-50/50 gap-3">
+          <h2 className="text-sm font-bold text-slate-900">All Client Feedback ({sortedReviews.length})</h2>
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-slate-400 font-medium">Sort by:</span>
             <select 
               value={sortBy} 
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-white border border-slate-300 rounded-lg py-1 px-3 text-xs outline-none focus:ring-2 focus:ring-indigo-500"
+              className="bg-white border border-slate-200 rounded-lg py-1 px-2.5 text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             >
               <option value="recent">Most Recent</option>
               <option value="highest">Highest Rating</option>
@@ -152,45 +152,42 @@ const FreelancerReviews = () => {
               const serviceTitle = review.service?.title || review.serviceName || 'Project Delivery';
 
               return (
-                <div key={review.id || review._id} className="p-6">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 overflow-hidden flex items-center justify-center font-bold text-sm">
-                        <img
-                          src={getImageUrl(reviewerAvatar, 'avatar')}
-                          alt={reviewerName}
-                          onError={(e) => handleImageError(e, 'avatar')}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
+                <div key={review.id || review._id} className="p-5 sm:p-6 space-y-3">
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar
+                        src={reviewerAvatar}
+                        name={reviewerName}
+                        size="md"
+                      />
                       <div>
                         <h4 className="font-bold text-slate-900 text-sm">{reviewerName}</h4>
-                        <div className="flex items-center text-xs text-slate-500">
+                        <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-400 mt-0.5">
                           <span>{formatRelativeTime(review.createdAt)}</span>
-                          <span className="mx-2">&bull;</span>
-                          <span className="truncate max-w-[220px] sm:max-w-md font-medium text-slate-700">{serviceTitle}</span>
+                          <span>•</span>
+                          <span className="font-medium text-slate-600 truncate max-w-xs">{serviceTitle}</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex space-x-0.5 text-yellow-400">
+                    <div className="flex gap-0.5 text-amber-400 shrink-0">
                       {renderStars(review.rating || 5)}
                     </div>
                   </div>
-                  <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-line pl-13">{review.comment}</p>
+                  <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-line pl-13">
+                    {review.comment}
+                  </p>
                 </div>
               );
             })
           ) : (
-            <div className="py-16 text-center text-slate-500 space-y-2">
-              <MessageSquare className="w-12 h-12 text-slate-300 mx-auto" />
-              <p className="font-semibold text-slate-700">No client reviews yet</p>
-              <p className="text-xs text-slate-400">Complete client orders and deliver milestone deliverables to earn ratings.</p>
-            </div>
+            <EmptyState
+              icon={MessageSquare}
+              title="No client reviews yet"
+              description="Complete client orders and deliver quality milestone deliverables to receive client ratings."
+            />
           )}
         </div>
       </Card>
     </div>
   );
-};
-
-export default FreelancerReviews;
+}

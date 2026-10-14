@@ -23,6 +23,15 @@ export const reviewService = {
     }
   },
 
+  getAllReviews: async (params = {}) => {
+    try {
+      const response = await api.get('/reviews', { params });
+      return response.data.data || [];
+    } catch (error) {
+      throw new Error(getErrorMessage(error, 'Failed to fetch all reviews'));
+    }
+  },
+
   createReview: async (data) => {
     try {
       const response = await api.post('/reviews', data);

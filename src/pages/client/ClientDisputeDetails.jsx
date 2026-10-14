@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronRight, Upload, FileText, AlertTriangle, CheckCircle, ShieldAlert, Download } from 'lucide-react';
+import { ChevronRight, Upload, FileText, AlertTriangle, CheckCircle, Download, ArrowLeft } from 'lucide-react';
 import { disputeService } from '../../services/disputeService';
 import { statsService } from '../../services/statsService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import StatusBadge from '../../components/common/StatusBadge';
+import Button from '../../components/common/Button';
+import Card from '../../components/common/Card';
+import Modal from '../../components/common/Modal';
 import toast from 'react-hot-toast';
 
 export default function ClientDisputeDetails() {
@@ -16,26 +20,27 @@ export default function ClientDisputeDetails() {
   const [evidenceFile, setEvidenceFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  const fetchDispute = async () => {
+  const fetchDispute = useCallback(async () => {
     try {
       setLoading(true);
       const data = await disputeService.getDisputeById(id);
       setDispute(data);
     } catch (err) {
+      console.error('Failed to load dispute:', err);
       toast.error('Failed to load dispute details');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchDispute();
-  }, [id]);
+  }, [fetchDispute]);
 
   const handleUploadEvidence = async (e) => {
     e.preventDefault();
-    if (!evidenceFile && !evidenceNote) {
-      return toast.error('Please upload a file or write a note');
+    if (!evidenceFile && !evidenceNote.trim()) {
+      return toast.error('Please upload a file or write an explanatory note');
     }
 
     try {
@@ -58,7 +63,7 @@ export default function ClientDisputeDetails() {
         fileName,
         size,
         mimeType,
-        note: evidenceNote
+        note: evidenceNote.trim()
       });
 
       toast.success('Evidence successfully attached to dispute record');
@@ -83,10 +88,11 @@ export default function ClientDisputeDetails() {
 
   if (!dispute) {
     return (
-      <div className="p-8 text-center">
-        <h2 className="text-xl font-bold text-gray-800">Dispute not found</h2>
-        <Link to="/client/disputes" className="mt-4 inline-block text-indigo-600 font-medium">
-          ← Back to Disputes
+      <div className="p-8 text-center max-w-lg mx-auto">
+        <h2 className="text-xl font-bold text-slate-800">Dispute record not found</h2>
+        <p className="text-sm text-slate-500 mt-2">The dispute case requested may have been archived or removed.</p>
+        <Link to="/client/disputes" className="mt-4 inline-flex items-center gap-1.5 text-primary font-semibold text-sm hover:underline">
+          <ArrowLeft className="w-4 h-4" /> Back to Disputes
         </Link>
       </div>
     );
@@ -94,151 +100,171 @@ export default function ClientDisputeDetails() {
 
   const deal = dispute.deal || {};
   const milestone = dispute.milestone || {};
-  const isResolved = dispute.status === 'RESOLVED';
+  const isResolved = (dispute.status || '').toUpperCase() === 'RESOLVED';
+  const amount = milestone.amount || deal.amount || 0;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto min-h-screen space-y-6">
-      <nav className="flex items-center text-sm text-gray-500 mb-2">
-        <Link to="/client/dashboard" className="hover:text-indigo-600">Dashboard</Link>
-        <ChevronRight className="w-4 h-4 mx-2" />
-        <Link to="/client/disputes" className="hover:text-indigo-600">Disputes</Link>
-        <ChevronRight className="w-4 h-4 mx-2" />
-        <span className="text-gray-900 font-semibold">Dispute #{dispute.id ? dispute.id.substring(0, 8) : dispute._id}</span>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6">
+      {/* Breadcrumb Navigation */}
+      <nav className="flex items-center text-xs text-slate-500">
+        <Link to="/client/dashboard" className="hover:text-primary transition-colors">Dashboard</Link>
+        <ChevronRight className="w-3.5 h-3.5 mx-1.5 text-slate-400" />
+        <Link to="/client/disputes" className="hover:text-primary transition-colors">Disputes</Link>
+        <ChevronRight className="w-3.5 h-3.5 mx-1.5 text-slate-400" />
+        <span className="text-slate-900 font-bold truncate max-w-[200px]">
+          Case #{dispute.id ? dispute.id.substring(0, 8) : dispute._id}
+        </span>
       </nav>
 
-      {/* Main Dispute Banner */}
-      <div className="bg-white rounded-xl shadow-sm border border-rose-200 p-6 border-t-4 border-t-rose-500">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{dispute.reason}</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Opened on {formatDate(dispute.createdAt)} • Project: <span className="font-semibold text-gray-800">{deal.title || 'Deal'}</span>
+      {/* Main Dispute Card */}
+      <Card className="overflow-hidden border border-slate-200 border-t-4 border-t-rose-500 shadow-xs">
+        <div className="p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-2xl font-black text-slate-900 tracking-tight">{dispute.reason}</h1>
+                <StatusBadge status={dispute.status} />
+              </div>
+              <p className="text-xs text-slate-500 mt-1.5">
+                Opened on {formatDate(dispute.createdAt)} • Project:{' '}
+                <Link to={`/client/deals/${deal.id || deal._id}`} className="font-semibold text-primary hover:underline">
+                  {deal.title || 'Deal'}
+                </Link>
+              </p>
+            </div>
+            <div className="text-left sm:text-right shrink-0 bg-slate-50 p-3 rounded-xl border border-slate-200/80">
+              <span className="text-xs uppercase font-bold text-slate-400 block tracking-wider">Contested Sum</span>
+              <span className="text-xl font-black text-slate-900">{formatCurrency(amount)}</span>
+            </div>
+          </div>
+
+          {/* Dispute Description */}
+          <div className="bg-rose-50/50 p-4 rounded-xl border border-rose-100">
+            <h3 className="text-xs font-bold text-rose-800 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 text-rose-600" />
+              Statement of Claim
+            </h3>
+            <p className="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">
+              {dispute.description || 'No detailed statement provided.'}
             </p>
           </div>
-          <span className={`px-3 py-1 text-xs font-bold uppercase rounded-full ${
-            isResolved
-              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-              : 'bg-rose-100 text-rose-800 border border-rose-200'
-          }`}>
-            {dispute.status}
-          </span>
-        </div>
 
-        {/* Dispute Description */}
-        <div className="bg-rose-50 p-4 rounded-lg mb-6 border border-rose-100">
-          <h3 className="text-xs font-bold text-rose-800 uppercase tracking-wider mb-1 flex items-center">
-            <AlertTriangle className="w-4 h-4 mr-1 text-rose-600" />
-            Statement of Claim
-          </h3>
-          <p className="text-sm text-gray-800 whitespace-pre-wrap">{dispute.description || 'No detailed statement provided.'}</p>
-        </div>
-
-        {/* Resolution Banner if Resolved */}
-        {isResolved && (
-          <div className="bg-emerald-50 p-4 rounded-lg mb-6 border border-emerald-200">
-            <h3 className="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-1 flex items-center">
-              <CheckCircle className="w-4 h-4 mr-1 text-emerald-600" />
-              Administrator Decision: {dispute.adminDecision || 'RESOLVED'}
-            </h3>
-            <p className="text-sm text-emerald-950 font-medium">{dispute.resolution}</p>
-          </div>
-        )}
-
-        {/* Evidence Section */}
-        <div className="border-t border-gray-100 pt-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-base font-bold text-gray-900 flex items-center">
-              <FileText className="w-4 h-4 text-indigo-600 mr-2" />
-              Evidence & Submissions ({dispute.evidence?.length || 0})
-            </h3>
-            {!isResolved && (
-              <button
-                onClick={() => setShowEvidenceModal(true)}
-                className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center shadow-sm"
-              >
-                <Upload className="w-3.5 h-3.5 mr-1.5" />
-                Attach Evidence
-              </button>
-            )}
-          </div>
-
-          {!dispute.evidence || dispute.evidence.length === 0 ? (
-            <p className="text-xs text-gray-500 italic">No attachments submitted yet.</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {dispute.evidence.map((ev, i) => (
-                <div key={i} className="p-3 bg-gray-50 rounded-lg border border-gray-200 flex flex-col justify-between">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-900 truncate">{ev.fileName || `Attachment ${i + 1}`}</p>
-                    {ev.note && <p className="text-xs text-gray-600 italic mt-1">"{ev.note}"</p>}
-                  </div>
-                  {ev.url && (
-                    <a
-                      href={ev.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-2 inline-flex items-center text-xs font-bold text-indigo-600 hover:underline"
-                    >
-                      <Download className="w-3.5 h-3.5 mr-1" /> View / Download File
-                    </a>
-                  )}
-                </div>
-              ))}
+          {/* Resolution Banner if Resolved */}
+          {isResolved && (
+            <div className="bg-emerald-50/60 p-5 rounded-xl border border-emerald-200">
+              <h3 className="text-xs font-bold text-emerald-800 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                <CheckCircle className="w-4 h-4 text-emerald-600" />
+                Administrator Decision: {dispute.adminDecision || 'RESOLVED'}
+              </h3>
+              <p className="text-sm text-emerald-950 font-medium leading-relaxed">{dispute.resolution}</p>
+              {dispute.resolvedAt && (
+                <p className="text-xs text-emerald-700 mt-2 font-medium">Arbitrated on {formatDate(dispute.resolvedAt)}</p>
+              )}
             </div>
           )}
-        </div>
-      </div>
 
-      {/* MODAL: UPLOAD EVIDENCE */}
-      {showEvidenceModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl space-y-4">
-            <h3 className="text-lg font-bold text-gray-900 flex items-center">
-              <Upload className="w-5 h-5 text-indigo-600 mr-2" />
-              Attach Evidence for Admin Review
-            </h3>
-
-            <form onSubmit={handleUploadEvidence} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Upload File (Screenshots, PDFs, Chat Export)</label>
-                <input
-                  type="file"
-                  onChange={(e) => setEvidenceFile(e.target.files?.[0] || null)}
-                  className="w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1">Notes / Explanation</label>
-                <textarea
-                  rows={3}
-                  placeholder="Explain what this evidence shows..."
-                  value={evidenceNote}
-                  onChange={(e) => setEvidenceNote(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowEvidenceModal(false)}
-                  className="px-4 py-2 border rounded-lg text-sm font-semibold text-gray-600 hover:bg-gray-50"
+          {/* Evidence Section */}
+          <div className="border-t border-slate-100 pt-6">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary" />
+                Evidence & Documentation ({dispute.evidence?.length || 0})
+              </h3>
+              {!isResolved && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowEvidenceModal(true)}
+                  className="gap-1.5 text-xs font-bold"
                 >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isUploading}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold flex items-center"
-                >
-                  {isUploading ? <LoadingSpinner size="sm" /> : 'Submit Evidence'}
-                </button>
+                  <Upload className="w-3.5 h-3.5" />
+                  Attach Evidence
+                </Button>
+              )}
+            </div>
+
+            {!dispute.evidence || dispute.evidence.length === 0 ? (
+              <div className="p-6 bg-slate-50/60 rounded-xl border border-slate-200/60 text-center text-xs text-slate-500">
+                No attachments submitted yet. Attach invoices, chat logs, or specifications to assist administration.
               </div>
-            </form>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {dispute.evidence.map((ev, i) => (
+                  <div key={i} className="p-3.5 bg-slate-50/70 rounded-xl border border-slate-200 flex flex-col justify-between gap-2">
+                    <div>
+                      <p className="text-xs font-bold text-slate-900 truncate">{ev.fileName || `Attachment ${i + 1}`}</p>
+                      {ev.note && <p className="text-xs text-slate-600 italic mt-1 leading-relaxed">"{ev.note}"</p>}
+                    </div>
+                    {ev.url && (
+                      <a
+                        href={ev.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1 inline-flex items-center text-xs font-bold text-primary hover:underline gap-1"
+                      >
+                        <Download className="w-3.5 h-3.5" /> View / Download Document
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      )}
+      </Card>
+
+      {/* Modal: Upload Evidence */}
+      <Modal
+        isOpen={showEvidenceModal}
+        onClose={() => setShowEvidenceModal(false)}
+        title="Attach Evidence for Review"
+      >
+        <form onSubmit={handleUploadEvidence} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Select Document or Screenshot
+            </label>
+            <input
+              type="file"
+              onChange={(e) => setEvidenceFile(e.target.files?.[0] || null)}
+              className="w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+            />
+            <p className="text-[11px] text-slate-400 mt-1">Accepts images, PDFs, and text logs up to 10MB.</p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Explanatory Notes
+            </label>
+            <textarea
+              rows={3}
+              placeholder="Explain how this file demonstrates milestone agreement or issues..."
+              value={evidenceNote}
+              onChange={(e) => setEvidenceNote(e.target.value)}
+              className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2.5 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowEvidenceModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              disabled={isUploading}
+            >
+              {isUploading ? <LoadingSpinner size="sm" /> : 'Submit Evidence'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
