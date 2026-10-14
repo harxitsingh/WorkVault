@@ -21,9 +21,24 @@ app.use(
 );
 
 // ─── CORS ────────────────────────────────────────────────
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true;
+  if (config.allowedOrigins && config.allowedOrigins.includes(origin)) return true;
+  // In development, also accept any localhost/127.0.0.1 port
+  if (config.nodeEnv !== 'production' && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+    return true;
+  }
+  return false;
+};
+
 app.use(
   cors({
-    origin: config.clientUrl || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      if (isAllowedOrigin(origin)) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'stripe-signature']

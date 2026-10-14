@@ -8,11 +8,33 @@ if (nodeEnv === 'production' && !jwtSecret) {
   throw new Error('JWT_SECRET must be configured in production');
 }
 
+const parseOrigins = (val) => {
+  if (!val) return [];
+  return val.split(',').map((s) => s.trim()).filter(Boolean);
+};
+
+const defaultAllowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+  'http://127.0.0.1:5175'
+];
+
+const envOrigins = [
+  ...parseOrigins(process.env.CLIENT_URL),
+  ...parseOrigins(process.env.ALLOWED_ORIGINS)
+];
+
+const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envOrigins]));
+
 export const config = {
   port: process.env.PORT || 5000,
   jwtSecret,
   jwtExpiresIn: '7d',
   clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
+  allowedOrigins,
   mongoUri: process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/workvault',
   nodeEnv,
   platformFeePercentage: parseFloat(process.env.PLATFORM_FEE_PERCENTAGE || '10'),
