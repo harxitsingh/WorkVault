@@ -1,92 +1,128 @@
 import React from 'react';
-import { Target, Users, Shield, TrendingUp, Handshake } from 'lucide-react';
+import { ShieldCheck, Handshake, Lock, CheckCircle2, Scale, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import Button from '../../components/common/Button';
 
 const AboutPage = () => {
   return (
-    <div className="bg-white">
-      {/* Hero */}
-      <div className="bg-indigo-50 py-20 lg:py-28 text-center px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-6">About WorkVault</h1>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          We're on a mission to create the most secure, transparent, and efficient marketplace for Indian freelance talent and global clients.
-        </p>
-      </div>
-
-      {/* Stats */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-10">
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <p className="text-3xl md:text-4xl font-extrabold text-indigo-600">10,000+</p>
-              <p className="text-sm font-medium text-gray-500 mt-2 uppercase tracking-wide">Active Users</p>
-            </div>
-            <div>
-              <p className="text-3xl md:text-4xl font-extrabold text-indigo-600">25,000+</p>
-              <p className="text-sm font-medium text-gray-500 mt-2 uppercase tracking-wide">Projects Done</p>
-            </div>
-            <div>
-              <p className="text-3xl md:text-4xl font-extrabold text-indigo-600">₹50Cr+</p>
-              <p className="text-sm font-medium text-gray-500 mt-2 uppercase tracking-wide">Transacted</p>
-            </div>
-            <div>
-              <p className="text-3xl md:text-4xl font-extrabold text-indigo-600">4.8/5</p>
-              <p className="text-sm font-medium text-gray-500 mt-2 uppercase tracking-wide">Avg Rating</p>
-            </div>
+    <div className="bg-[#F8FAFC] min-h-screen">
+      {/* Header */}
+      <section className="bg-white border-b border-slate-200/80 py-16 lg:py-24 text-center px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#2F5BEA] text-xs font-semibold mb-4">
+            <ShieldCheck className="h-4 w-4" />
+            <span>Platform Architecture & Trust Model</span>
           </div>
-        </div>
-      </div>
-
-      {/* Mission & Values */}
-      <div className="py-20 lg:py-32 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-20">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Mission</h2>
-          <p className="text-lg text-gray-600 leading-relaxed max-w-4xl">
-            Freelancing should be freeing, not stressful. For too long, freelancers have dealt with late payments and scope creep, while clients have struggled with unreliable delivery and lack of transparency. WorkVault was built to fix this broken system with our secure escrow-style payments, rigid milestone tracking, and dedicated dispute resolution.
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight mb-5">
+            About WorkVault
+          </h1>
+          <p className="text-base sm:text-lg text-slate-600 leading-relaxed">
+            WorkVault is a purpose-built freelance marketplace built around a single non-negotiable principle: 
+            neither client nor freelancer should take uncollateralized financial risk during freelance engagements.
           </p>
         </div>
+      </section>
 
-        <h2 className="text-3xl font-bold text-gray-900 mb-10">Core Values</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-          <div className="bg-gray-50 p-8 rounded-2xl">
-            <Shield className="h-10 w-10 text-indigo-600 mb-5" />
-            <h3 className="text-xl font-bold text-gray-900 mb-3">Security First</h3>
-            <p className="text-gray-600">Every payment is secured in our escrow system. We protect both the client's money and the freelancer's time.</p>
-          </div>
-          <div className="bg-gray-50 p-8 rounded-2xl">
-            <Handshake className="h-10 w-10 text-indigo-600 mb-5" />
-            <h3 className="text-xl font-bold text-gray-900 mb-3">Fair Play</h3>
-            <p className="text-gray-600">We believe in transparent terms, clear deliverables, and unbiased dispute resolution to keep things fair for everyone.</p>
-          </div>
-          <div className="bg-gray-50 p-8 rounded-2xl">
-            <TrendingUp className="h-10 w-10 text-indigo-600 mb-5" />
-            <h3 className="text-xl font-bold text-gray-900 mb-3">Empowering Talent</h3>
-            <p className="text-gray-600">We aim to elevate Indian freelance talent on the global stage, providing them with the tools they need to run a successful business.</p>
-          </div>
-        </div>
-      </div>
+      {/* Escrow Architecture Overview */}
+      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-8 sm:p-12 shadow-xs mb-12">
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight mb-4">Why Escrow Protection Matters</h2>
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed mb-8 max-w-4xl">
+            In traditional freelancing models, freelancers risk working for weeks without guaranteed payment, while clients risk paying advance deposits for substandard or non-delivered work. WorkVault eliminates this conflict by utilizing an escrow ledger system.
+          </p>
 
-      {/* Team */}
-      <div className="bg-gray-900 py-24 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-16">The Team Behind WorkVault</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12">
-            {[
-              { name: 'Rahul Sharma', role: 'Founder & CEO', init: 'RS' },
-              { name: 'Priya Patel', role: 'Head of Product', init: 'PP' },
-              { name: 'Amit Singh', role: 'CTO', init: 'AS' },
-              { name: 'Neha Gupta', role: 'Community Lead', init: 'NG' }
-            ].map((member, idx) => (
-              <div key={idx} className="flex flex-col items-center">
-                <div className="h-32 w-32 rounded-full bg-gray-800 flex items-center justify-center text-3xl font-bold text-gray-500 mb-6 border-4 border-gray-700">
-                  {member.init}
-                </div>
-                <h4 className="text-lg font-bold">{member.name}</h4>
-                <p className="text-gray-400">{member.role}</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-xl bg-[#F8FAFC] border border-slate-200/80">
+              <div className="h-10 w-10 rounded-lg bg-blue-50 text-[#2F5BEA] flex items-center justify-center mb-4">
+                <Lock className="h-5 w-5" />
               </div>
-            ))}
+              <h3 className="text-base font-bold text-slate-900 mb-2">Funded Before Start</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Work begins only when the deal milestone is funded into escrow, verifying that the client has deposited the necessary capital.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-xl bg-[#F8FAFC] border border-slate-200/80">
+              <div className="h-10 w-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 mb-2">Satisfaction Release</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                Escrow funds are only released upon explicit client review and acceptance of completed deliverables.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-xl bg-[#F8FAFC] border border-slate-200/80">
+              <div className="h-10 w-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center mb-4">
+                <Scale className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 mb-2">Impartial Arbitration</h3>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                If expectations diverge, either party can trigger formal dispute arbitration, with platform administrators assessing evidence.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+
+        {/* Operating Pillars */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+          <div className="bg-white p-8 rounded-2xl border border-slate-200/80 shadow-xs">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">For Clients</h3>
+            <ul className="space-y-3 text-xs sm:text-sm text-slate-600">
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                <span>Search verified freelancer profiles with transparent pricing and real portfolio work.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                <span>Fund project milestones securely without releasing payment before inspection.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                <span>Full access to formal milestone dispute mechanisms if deliverables do not match agreed criteria.</span>
+              </li>
+            </ul>
+          </div>
+
+          <div className="bg-white p-8 rounded-2xl border border-slate-200/80 shadow-xs">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">For Freelancers</h3>
+            <ul className="space-y-3 text-xs sm:text-sm text-slate-600">
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                <span>Publish custom service offerings with defined turnaround times and package tiers.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                <span>Never work on speculative invoices: start execution only after milestone funding is confirmed.</span>
+              </li>
+              <li className="flex items-start gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                <span>Instant balance release upon deal completion with verifiable payment ledgers.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Call to action */}
+        <div className="text-center p-10 rounded-2xl bg-[#0E1525] text-white">
+          <h2 className="text-2xl font-bold mb-3">Ready to start collaborating?</h2>
+          <p className="text-sm text-slate-400 max-w-xl mx-auto mb-6">
+            Join WorkVault as a client seeking specialized talent or as a freelancer offering expert services.
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            <Link to="/services">
+              <Button variant="primary" size="md">
+                Browse Marketplace
+              </Button>
+            </Link>
+            <Link to="/register">
+              <Button variant="secondary" size="md">
+                Create Free Account
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   );
 };

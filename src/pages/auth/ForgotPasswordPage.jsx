@@ -1,80 +1,48 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Mail, ArrowLeft, ShieldAlert, KeyRound } from 'lucide-react';
 import Button from '../../components/common/Button';
 
 const ForgotPasswordPage = () => {
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [email, setEmail] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      setIsSubmitted(true);
-    }, 1000);
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-[calc(100vh-4rem)] bg-[#F8FAFC] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow-xl shadow-gray-200/50 sm:rounded-2xl sm:px-10 border border-gray-100 text-center">
+        <div className="bg-white py-8 px-5 sm:px-8 shadow-sm rounded-2xl border border-slate-200/90 text-center">
           
-          {!isSubmitted ? (
-            <>
-              <div className="mx-auto h-12 w-12 bg-indigo-100 rounded-full flex items-center justify-center mb-6">
-                <Mail className="h-6 w-6 text-indigo-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Reset your password</h2>
-              <p className="text-sm text-gray-500 mb-8">
-                Enter your email address and we'll send you a link to reset your password.
-              </p>
+          <div className="mx-auto h-12 w-12 bg-amber-50 rounded-2xl border border-amber-200/80 flex items-center justify-center mb-5 text-amber-600">
+            <KeyRound className="h-6 w-6" />
+          </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6 text-left">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email address</label>
-                  <div className="mt-1 relative rounded-md shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      id="email"
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="block w-full pl-10 sm:text-sm border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="you@example.com"
-                    />
-                  </div>
-                </div>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Password Recovery Notice</h2>
+          
+          <div className="my-5 p-4 rounded-xl bg-slate-50 border border-slate-200 text-left text-xs text-slate-600 space-y-2">
+            <div className="flex items-center gap-2 font-semibold text-slate-900">
+              <ShieldAlert className="h-4 w-4 text-amber-600 shrink-0" />
+              <span>Self-Service Reset Unavailable</span>
+            </div>
+            <p className="leading-relaxed">
+              Automated SMTP email dispatch is not configured in this local environment. To access existing test accounts, use the canonical seeded credentials below:
+            </p>
+            <div className="p-2.5 bg-white rounded-lg border border-slate-200 font-mono text-[11px] text-slate-800 space-y-1">
+              <div>Client: client@example.com (password123)</div>
+              <div>Freelancer: freelancer@example.com (password123)</div>
+              <div>Admin: admin@example.com (password123)</div>
+            </div>
+          </div>
 
-                <Button type="submit" variant="primary" className="w-full" isLoading={isLoading}>
-                  Send Reset Link
-                </Button>
-              </form>
-            </>
-          ) : (
-            <>
-              <div className="mx-auto h-12 w-12 bg-emerald-100 rounded-full flex items-center justify-center mb-6">
-                <CheckCircle className="h-6 w-6 text-emerald-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h2>
-              <p className="text-sm text-gray-500 mb-8">
-                We've sent a password reset link to <strong>{email}</strong>.
-              </p>
-              <Button onClick={() => setIsSubmitted(false)} variant="outline" className="w-full">
-                Didn't receive it? Try again
-              </Button>
-            </>
-          )}
+          <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+            For personal production accounts, please contact platform administrators at <span className="font-semibold text-slate-700">support@workvault.local</span> for credential re-issuance.
+          </p>
 
-          <div className="mt-8">
-            <Link to="/login" className="flex items-center justify-center text-sm font-medium text-indigo-600 hover:text-indigo-500">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to login
+          <Link to="/login" className="block w-full">
+            <Button variant="primary" className="w-full">
+              Back to Sign In
+            </Button>
+          </Link>
+
+          <div className="mt-6 pt-4 border-t border-slate-100">
+            <Link to="/" className="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-slate-800">
+              <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Return to Homepage
             </Link>
           </div>
         </div>

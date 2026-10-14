@@ -1,23 +1,35 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { ShieldAlert, ArrowLeft, Home, Search } from 'lucide-react';
 import Button from '../../components/common/Button';
 
 const NotFoundPage = () => {
   return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center text-center px-4">
-      <h1 className="text-9xl font-extrabold text-indigo-600 tracking-widest">404</h1>
-      <div className="bg-indigo-600 text-white px-2 text-sm rounded rotate-12 absolute">
-        Page Not Found
+    <div className="min-h-[70vh] flex flex-col items-center justify-center text-center px-4 py-16 bg-[#F8FAFC]">
+      <div className="h-16 w-16 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 mb-6 shadow-xs">
+        <ShieldAlert className="h-8 w-8 text-slate-500" />
       </div>
-      <h2 className="mt-8 text-3xl font-bold text-gray-900 tracking-tight sm:text-4xl">
-        Oops! We can't find that page.
-      </h2>
-      <p className="mt-4 text-gray-500 text-lg max-w-md mx-auto">
-        The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+
+      <p className="text-xs font-bold uppercase tracking-wider text-[#2F5BEA] mb-2">Error 404</p>
+      
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight mb-3">
+        Page Not Found
+      </h1>
+
+      <p className="text-sm text-slate-500 max-w-md mx-auto mb-8 leading-relaxed">
+        The link you followed may be broken, or the page may have been moved or removed.
       </p>
-      <div className="mt-10">
+
+      <div className="flex flex-wrap items-center justify-center gap-3">
         <Link to="/">
-          <Button variant="primary" size="lg">Go Home</Button>
+          <Button variant="primary" icon={<Home className="h-4 w-4" />}>
+            WorkVault Home
+          </Button>
+        </Link>
+        <Link to="/services">
+          <Button variant="outline" icon={<Search className="h-4 w-4" />}>
+            Explore Services
+          </Button>
         </Link>
       </div>
     </div>
