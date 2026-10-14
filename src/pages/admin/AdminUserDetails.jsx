@@ -1,17 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { 
   ChevronRight, MapPin, Mail, Phone, Calendar, 
-  ShieldOff, Star, CheckCircle, AlertCircle 
+  ShieldOff, ShieldCheck, Star, CheckCircle2, AlertCircle, ArrowLeft, Briefcase, FileText
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getImageUrl, handleImageError } from '../../utils/imageHelper';
 import { adminService } from '../../services/adminService';
 import { userService } from '../../services/userService';
-import { formatDate } from '../../utils/formatters';
+import { formatCurrency, formatDate } from '../../utils/formatters';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-
-const formatCurrency = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val || 0);
+import Avatar from '../../components/common/Avatar';
+import StatusBadge from '../../components/common/StatusBadge';
+import Button from '../../components/common/Button';
+import Card from '../../components/common/Card';
+import ConfirmModal from '../../components/common/ConfirmModal';
 
 export default function AdminUserDetails() {
   const { id } = useParams();
@@ -20,47 +22,45 @@ export default function AdminUserDetails() {
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [showStatusConfirm, setShowStatusConfirm] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchUserDetails = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const userData = await adminService.getUserById(id);
-        if (!isMounted) return;
-        setUser(userData);
+  const fetchUserDetails = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const userData = await adminService.getUserById(id);
+      setUser(userData);
 
-        // Fetch user services if freelancer
-        if (userData?.role === 'freelancer') {
-          userService.getUserServices(id)
-            .then(s => isMounted && setServices(s || []))
-            .catch(() => {});
-        }
-
-        // Fetch platform deals to filter user's deals
-        adminService.getDeals()
-          .then(allDeals => {
-            if (!isMounted) return;
-            const userDeals = (allDeals || []).filter(d => 
-              (d.client?._id || d.client?.id || d.client) === id ||
-              (d.freelancer?._id || d.freelancer?.id || d.freelancer) === id
-            );
-            setDeals(userDeals);
-          })
+      // Fetch user services if freelancer
+      if (userData?.role === 'freelancer') {
+        userService.getUserServices(id)
+          .then(s => setServices(s || []))
           .catch(() => {});
-
-      } catch (err) {
-        if (isMounted) setError(err.message || 'Failed to load user details');
-      } finally {
-        if (isMounted) setLoading(false);
       }
-    };
 
-    fetchUserDetails();
-    return () => { isMounted = false; };
+      // Fetch platform deals to filter user's deals
+      adminService.getDeals()
+        .then(allDeals => {
+          const userDeals = (allDeals || []).filter(d => 
+            (d.client?._id || d.client?.id || d.client) === id ||
+            (d.freelancer?._id || d.freelancer?.id || d.freelancer) === id
+          );
+          setDeals(userDeals);
+        })
+        .catch(() => {});
+
+    } catch (err) {
+      console.error('Failed to load user details:', err);
+      setError(err.message || 'Failed to load user details');
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
+
+  useEffect(() => {
+    fetchUserDetails();
+  }, [fetchUserDetails]);
 
   const handleStatusChange = async () => {
     if (!user || updatingStatus) return;
@@ -71,7 +71,8 @@ export default function AdminUserDetails() {
       setUpdatingStatus(true);
       await adminService.updateUserStatus(id, { status: nextStatus });
       setUser(prev => ({ ...prev, status: nextStatus }));
-      toast.success(`User has been ${nextStatus === 'Suspended' ? 'suspended' : 'activated'}.`);
+      toast.success(`Account has been ${nextStatus === 'Suspended' ? 'suspended' : 'activated'}.`);
+      setShowStatusConfirm(false);
     } catch (err) {
       toast.error(err.message || 'Failed to update user status');
     } finally {
@@ -81,7 +82,7 @@ export default function AdminUserDetails() {
 
   if (loading) {
     return (
-      <div className="p-6 bg-slate-50 min-h-screen flex justify-center items-center">
+      <div className="p-8 min-h-[60vh] flex justify-center items-center">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -89,118 +90,124 @@ export default function AdminUserDetails() {
 
   if (error || !user) {
     return (
-      <div className="p-6 bg-slate-50 min-h-screen">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center max-w-lg mx-auto">
-          <AlertCircle className="w-12 h-12 text-rose-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-slate-900 mb-2">User Not Found</h2>
-          <p className="text-sm text-slate-500 mb-6">{error || 'Could not find the requested user profile.'}</p>
-          <Link to="/admin/users" className="px-4 py-2 bg-indigo-600 text-white font-medium rounded-lg text-sm hover:bg-indigo-700">
-            Back to Users
-          </Link>
-        </div>
+      <div className="p-6 max-w-lg mx-auto text-center space-y-4">
+        <AlertCircle className="w-12 h-12 text-rose-500 mx-auto" />
+        <h2 className="text-xl font-bold text-slate-900">User Account Not Found</h2>
+        <p className="text-sm text-slate-500">{error || 'Could not find the requested user profile in system records.'}</p>
+        <Link to="/admin/users" className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline">
+          <ArrowLeft className="w-4 h-4" /> Back to Users
+        </Link>
       </div>
     );
   }
 
   const isFreelancer = user.role === 'freelancer';
   const userStatus = user.status || 'Active';
+  const completedDealsCount = deals.filter(d => (d.status || '').toUpperCase() === 'RELEASED' || (d.status || '').toUpperCase() === 'COMPLETED').length;
 
   return (
-    <div className="p-6 bg-slate-50 min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6">
       {/* Breadcrumbs */}
-      <div className="flex items-center text-sm text-slate-500 mb-6">
-        <Link to="/admin" className="hover:text-indigo-600">Admin</Link>
-        <ChevronRight className="w-4 h-4 mx-1" />
-        <Link to="/admin/users" className="hover:text-indigo-600">Users</Link>
-        <ChevronRight className="w-4 h-4 mx-1" />
-        <span className="text-slate-900 font-medium">{user.name}</span>
-      </div>
+      <nav className="flex items-center text-xs text-slate-500">
+        <Link to="/admin" className="hover:text-primary transition-colors">Admin Dashboard</Link>
+        <ChevronRight className="w-3.5 h-3.5 mx-1.5 text-slate-400" />
+        <Link to="/admin/users" className="hover:text-primary transition-colors">Users</Link>
+        <ChevronRight className="w-3.5 h-3.5 mx-1.5 text-slate-400" />
+        <span className="text-slate-900 font-bold truncate max-w-[200px]">{user.name}</span>
+      </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Profile Card */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="h-24 bg-gradient-to-r from-indigo-500 to-purple-600"></div>
+          <Card className="overflow-hidden border border-slate-200 shadow-xs">
+            <div className="h-20 bg-gradient-to-r from-primary to-primary-hover" />
             <div className="px-6 pb-6 relative">
-              <img 
-                src={getImageUrl(user.avatar || user.profileImage, 'avatar')} 
-                alt={user.name} 
-                onError={(e) => handleImageError(e, 'avatar')}
-                className="w-20 h-20 rounded-full border-4 border-white absolute -top-10 bg-white object-cover shadow-sm"
-              />
-              <div className="mt-12">
-                <div className="flex justify-between items-start">
+              <div className="w-18 h-18 rounded-full border-4 border-white absolute -top-9 bg-white shadow-xs">
+                <Avatar
+                  src={user.avatar || user.profileImage}
+                  name={user.name}
+                  size="xl"
+                  className="w-full h-full"
+                />
+              </div>
+
+              <div className="mt-12 space-y-4">
+                <div className="flex justify-between items-start gap-2">
                   <div>
-                    <h1 className="text-xl font-bold text-slate-900">{user.name}</h1>
-                    <p className="text-sm text-slate-500 capitalize">{user.role}</p>
+                    <h1 className="text-xl font-black text-slate-900">{user.name}</h1>
+                    <div className="mt-1">
+                      <StatusBadge status={user.role} />
+                    </div>
                   </div>
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${
-                    userStatus === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+                    userStatus === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
                   }`}>
                     {userStatus}
                   </span>
                 </div>
                 
                 {user.bio && (
-                  <p className="mt-4 text-sm text-slate-700 leading-relaxed">{user.bio}</p>
+                  <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
+                    {user.bio}
+                  </p>
                 )}
                 
-                <div className="mt-6 space-y-3">
-                  <div className="flex items-center text-sm text-slate-600">
-                    <Mail className="w-4 h-4 mr-3 text-slate-400" /> {user.email}
+                <div className="space-y-2.5 pt-2 text-xs text-slate-600">
+                  <div className="flex items-center gap-2.5">
+                    <Mail className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span className="truncate">{user.email}</span>
                   </div>
                   {user.phone && (
-                    <div className="flex items-center text-sm text-slate-600">
-                      <Phone className="w-4 h-4 mr-3 text-slate-400" /> {user.phone}
+                    <div className="flex items-center gap-2.5">
+                      <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+                      <span>{user.phone}</span>
                     </div>
                   )}
-                  <div className="flex items-center text-sm text-slate-600">
-                    <MapPin className="w-4 h-4 mr-3 text-slate-400" /> {user.location || 'India'}
+                  <div className="flex items-center gap-2.5">
+                    <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span>{user.location || 'India'}</span>
                   </div>
-                  <div className="flex items-center text-sm text-slate-600">
-                    <Calendar className="w-4 h-4 mr-3 text-slate-400" /> Joined {formatDate(user.createdAt)}
+                  <div className="flex items-center gap-2.5">
+                    <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span>Member since {formatDate(user.createdAt)}</span>
                   </div>
                 </div>
 
-                <div className="mt-6 pt-6 border-t border-slate-100">
-                  <button 
-                    onClick={handleStatusChange}
-                    disabled={updatingStatus}
-                    className={`w-full py-2 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-colors ${
-                      userStatus === 'Active' 
-                        ? 'bg-red-50 text-red-600 hover:bg-red-100' 
-                        : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-                    }`}
+                <div className="pt-4 border-t border-slate-100">
+                  <Button 
+                    variant={userStatus === 'Active' ? 'danger' : 'primary'}
+                    className="w-full justify-center gap-2 text-xs"
+                    onClick={() => setShowStatusConfirm(true)}
                   >
-                    <ShieldOff className="w-4 h-4" />
-                    {updatingStatus ? 'Updating...' : (userStatus === 'Active' ? 'Suspend User' : 'Activate User')}
-                  </button>
+                    {userStatus === 'Active' ? <ShieldOff className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
+                    {userStatus === 'Active' ? 'Suspend Account' : 'Reactivate Account'}
+                  </Button>
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
 
           {/* Stats Summary for Freelancer */}
           {isFreelancer && (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-              <h3 className="font-semibold text-slate-900 mb-4">Performance</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 bg-slate-50 rounded-lg">
+            <Card className="p-5 border border-slate-200 shadow-xs space-y-3">
+              <h3 className="font-bold text-slate-900 text-xs uppercase tracking-wider">Performance Metrics</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                   <div className="flex items-center text-amber-500 mb-1">
-                    <Star className="w-4 h-4 fill-current mr-1" />
-                    <span className="font-bold text-slate-900">{user.rating || 5.0}</span>
+                    <Star className="w-4 h-4 fill-amber-400 text-amber-400 mr-1" />
+                    <span className="font-bold text-slate-900 text-sm">{user.rating || 5.0}</span>
                   </div>
-                  <div className="text-xs text-slate-500">Rating</div>
+                  <div className="text-[11px] text-slate-400 font-medium">Reputation</div>
                 </div>
-                <div className="p-3 bg-slate-50 rounded-lg">
-                  <div className="flex items-center text-emerald-500 mb-1">
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    <span className="font-bold text-slate-900">{user.completedProjects || deals.filter(d => d.status === 'RELEASED').length}</span>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <div className="flex items-center text-emerald-600 mb-1">
+                    <CheckCircle2 className="w-4 h-4 mr-1" />
+                    <span className="font-bold text-slate-900 text-sm">{completedDealsCount}</span>
                   </div>
-                  <div className="text-xs text-slate-500">Completed Deals</div>
+                  <div className="text-[11px] text-slate-400 font-medium">Completed Deals</div>
                 </div>
               </div>
-            </div>
+            </Card>
           )}
         </div>
 
@@ -208,81 +215,106 @@ export default function AdminUserDetails() {
         <div className="lg:col-span-2 space-y-6">
           {/* Services (if freelancer) */}
           {isFreelancer && (
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-200">
-                <h3 className="font-semibold text-slate-900">Services Offered ({services.length})</h3>
+            <Card className="overflow-hidden border border-slate-200 shadow-xs">
+              <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                  <Briefcase className="w-4 h-4 text-primary" />
+                  Services Offered ({services.length})
+                </h3>
               </div>
               {services.length === 0 ? (
-                <div className="p-8 text-center text-slate-400 text-sm">No services published yet.</div>
+                <div className="p-8 text-center text-slate-400 text-xs">No services published yet.</div>
               ) : (
                 <div className="divide-y divide-slate-100">
-                  {services.map(service => (
-                    <div key={service.id || service._id} className="p-6 flex justify-between items-center hover:bg-slate-50">
-                      <div>
-                        <h4 className="font-medium text-slate-900">{service.title}</h4>
-                        <p className="text-sm text-slate-500 mt-1">Base Price: {formatCurrency(service.price)} &bull; {service.category}</p>
+                  {services.map(service => {
+                    const sId = service.id || service._id;
+                    return (
+                      <div key={sId} className="p-4 sm:p-5 flex justify-between items-center hover:bg-slate-50/70 transition-colors">
+                        <div>
+                          <h4 className="font-bold text-slate-900 text-sm">{service.title}</h4>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            Starting: <strong className="text-slate-800">{formatCurrency(service.price)}</strong> • Category: {service.category}
+                          </p>
+                        </div>
+                        <Link
+                          to={`/services/${sId}`}
+                          className="text-xs font-bold text-primary hover:underline"
+                        >
+                          View Listing
+                        </Link>
                       </div>
-                      <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
-                        service.isActive !== false ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-700'
-                      }`}>
-                        {service.isActive !== false ? 'Active' : 'Inactive'}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
-            </div>
+            </Card>
           )}
 
-          {/* Recent Deals */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
-              <h3 className="font-semibold text-slate-900">Deals Involving User ({deals.length})</h3>
-              <Link to="/admin/deals" className="text-sm text-indigo-600 hover:text-indigo-800">View All Deals</Link>
+          {/* Deals Involving User */}
+          <Card className="overflow-hidden border border-slate-200 shadow-xs">
+            <div className="p-4 sm:p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <FileText className="w-4 h-4 text-primary" />
+                Deals Involving User ({deals.length})
+              </h3>
+              <Link to="/admin/deals" className="text-xs font-bold text-primary hover:underline">
+                View All Deals
+              </Link>
             </div>
             {deals.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 text-sm">No deals recorded for this user.</div>
+              <div className="p-8 text-center text-slate-400 text-xs">No deals recorded for this user account.</div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-slate-50 text-slate-500 uppercase text-xs">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-slate-50/80 text-slate-500 uppercase tracking-wider font-bold text-[11px] border-b border-slate-100">
                     <tr>
-                      <th className="px-6 py-3 font-medium">Deal Title</th>
-                      <th className="px-6 py-3 font-medium">{isFreelancer ? 'Client' : 'Freelancer'}</th>
-                      <th className="px-6 py-3 font-medium">Amount</th>
-                      <th className="px-6 py-3 font-medium">Status</th>
+                      <th className="py-3 px-4 font-bold">Deal Title</th>
+                      <th className="py-3 px-4 font-bold">{isFreelancer ? 'Client' : 'Freelancer'}</th>
+                      <th className="py-3 px-4 font-bold">Amount</th>
+                      <th className="py-3 px-4 font-bold">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {deals.map(deal => (
-                      <tr key={deal.id || deal._id} className="hover:bg-slate-50">
-                        <td className="px-6 py-4">
-                          <div className="font-medium text-slate-900">{deal.title}</div>
-                          <div className="text-xs text-slate-500">{formatDate(deal.createdAt)}</div>
-                        </td>
-                        <td className="px-6 py-4 text-slate-700">
-                          {isFreelancer ? (deal.client?.name || 'Client') : (deal.freelancer?.name || 'Freelancer')}
-                        </td>
-                        <td className="px-6 py-4 font-medium text-slate-900">{formatCurrency(deal.amount)}</td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                            deal.status === 'RELEASED' ? 'bg-emerald-100 text-emerald-700' :
-                            deal.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
-                            deal.status === 'CANCELLED' ? 'bg-rose-100 text-rose-700' :
-                            'bg-amber-100 text-amber-700'
-                          }`}>
-                            {deal.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                  <tbody className="divide-y divide-slate-100">
+                    {deals.map(deal => {
+                      const dId = deal.id || deal._id;
+                      const partnerName = isFreelancer ? (deal.client?.name || 'Client') : (deal.freelancer?.name || 'Freelancer');
+                      return (
+                        <tr key={dId} className="hover:bg-slate-50/70 transition-colors">
+                          <td className="py-3 px-4">
+                            <div className="font-bold text-slate-900">{deal.title}</div>
+                            <div className="text-[11px] text-slate-400">{formatDate(deal.createdAt)}</div>
+                          </td>
+                          <td className="py-3 px-4 text-slate-700 font-medium">{partnerName}</td>
+                          <td className="py-3 px-4 font-black text-slate-900">{formatCurrency(deal.amount || 0)}</td>
+                          <td className="py-3 px-4">
+                            <StatusBadge status={deal.status} />
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             )}
-          </div>
+          </Card>
         </div>
       </div>
+
+      {/* Confirmation Modal for Status Change */}
+      <ConfirmModal
+        isOpen={showStatusConfirm}
+        onClose={() => setShowStatusConfirm(false)}
+        onConfirm={handleStatusChange}
+        title={userStatus === 'Active' ? 'Suspend User Account' : 'Reactivate User Account'}
+        message={
+          userStatus === 'Active'
+            ? `Are you sure you want to suspend "${user.name}"? They will lose access to create services, fund deals, or submit deliverables until reactivated.`
+            : `Are you sure you want to reactivate "${user.name}"? Their account access and marketplace privileges will be restored immediately.`
+        }
+        confirmText={userStatus === 'Active' ? 'Yes, Suspend Account' : 'Yes, Reactivate Account'}
+        variant={userStatus === 'Active' ? 'danger' : 'primary'}
+        isLoading={updatingStatus}
+      />
     </div>
   );
 }

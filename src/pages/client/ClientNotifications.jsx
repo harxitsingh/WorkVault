@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, CheckCircle, FileText, AlertTriangle, IndianRupee, ShieldAlert } from 'lucide-react';
+import { Bell, FileText, AlertTriangle, Check, Wallet } from 'lucide-react';
 import { notificationService } from '../../services/notificationService';
 import { formatDate } from '../../utils/formatters';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import Card from '../../components/common/Card';
+import Button from '../../components/common/Button';
+import EmptyState from '../../components/common/EmptyState';
 import toast from 'react-hot-toast';
 
 export default function ClientNotifications() {
@@ -13,8 +16,9 @@ export default function ClientNotifications() {
     try {
       setLoading(true);
       const data = await notificationService.getNotifications();
-      setNotifications(data);
+      setNotifications(data || []);
     } catch (err) {
+      console.error('Failed to load notifications:', err);
       toast.error('Failed to load notifications');
     } finally {
       setLoading(false);
@@ -31,6 +35,7 @@ export default function ClientNotifications() {
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true, read: true })));
       toast.success('All notifications marked as read');
     } catch (err) {
+      console.error('Failed to mark all as read:', err);
       toast.error('Failed to mark all as read');
     }
   };
@@ -40,55 +45,76 @@ export default function ClientNotifications() {
       await notificationService.markAsRead(id);
       setNotifications(prev => prev.map(n => (n._id === id || n.id === id) ? { ...n, isRead: true, read: true } : n));
     } catch (err) {
-      // quiet fail
+      console.error('Failed to mark notification read:', err);
     }
   };
 
   const getIcon = (type) => {
     switch (type) {
       case 'delivery_submitted':
-        return <FileText className="w-5 h-5 text-indigo-500" />;
+        return (
+          <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <FileText className="w-4 h-4" />
+          </div>
+        );
       case 'payment_held':
       case 'payment_released':
-        return <IndianRupee className="w-5 h-5 text-emerald-500" />;
+        return (
+          <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <Wallet className="w-4 h-4" />
+          </div>
+        );
       case 'dispute_opened':
       case 'dispute_resolved':
-        return <AlertTriangle className="w-5 h-5 text-rose-500" />;
+        return (
+          <div className="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+            <AlertTriangle className="w-4 h-4" />
+          </div>
+        );
       default:
-        return <Bell className="w-5 h-5 text-indigo-500" />;
+        return (
+          <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+            <Bell className="w-4 h-4" />
+          </div>
+        );
     }
   };
 
+  const hasUnread = notifications.some(n => !n.isRead && !n.read);
+
   return (
-    <div className="p-6 max-w-4xl mx-auto min-h-screen space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Notifications</h1>
-          <p className="text-gray-600 mt-1">Real-time alerts for project milestones, escrow payments, and submissions.</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">Activity Alerts</h1>
+          <p className="text-sm text-slate-500 mt-1">Real-time alerts for project milestones, escrow deposits, and deliveries.</p>
         </div>
-        {notifications.some(n => !n.isRead && !n.read) && (
-          <button
+        {hasUnread && (
+          <Button
+            variant="outline"
+            size="sm"
             onClick={markAllRead}
-            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3.5 py-2 rounded-lg transition-colors"
+            className="gap-1.5 text-xs font-bold self-start sm:self-auto"
           >
-            Mark all as read
-          </button>
+            <Check className="w-3.5 h-3.5" />
+            Mark all read
+          </Button>
         )}
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <Card className="overflow-hidden border border-slate-200 shadow-xs">
         {loading ? (
-          <div className="py-16 flex justify-center">
+          <div className="py-20 flex justify-center items-center">
             <LoadingSpinner size="lg" />
           </div>
         ) : notifications.length === 0 ? (
-          <div className="py-16 text-center text-gray-400">
-            <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="font-semibold text-gray-700">No notifications yet</p>
-            <p className="text-xs mt-1">Updates regarding your projects and milestone events will appear here.</p>
-          </div>
+          <EmptyState
+            icon={Bell}
+            title="You're all caught up"
+            description="Updates regarding your freelance projects and milestone events will appear here."
+          />
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-slate-100">
             {notifications.map((notif) => {
               const isUnread = !notif.isRead && !notif.read;
               const notifId = notif._id || notif.id;
@@ -96,27 +122,35 @@ export default function ClientNotifications() {
                 <div
                   key={notifId}
                   onClick={() => markAsRead(notifId)}
-                  className={`p-5 flex items-start cursor-pointer transition-colors hover:bg-gray-50 ${isUnread ? 'bg-indigo-50/20' : ''}`}
+                  className={`p-4 sm:p-5 flex items-start gap-4 cursor-pointer transition-colors hover:bg-slate-50/80 ${
+                    isUnread ? 'bg-primary/5' : ''
+                  }`}
                 >
-                  {isUnread && (
-                    <div className="w-2 h-2 rounded-full bg-indigo-600 mt-2 mr-3 shrink-0"></div>
-                  )}
-                  <div className={`p-2.5 rounded-full bg-white border border-gray-100 shadow-sm shrink-0 ${!isUnread ? 'ml-5' : ''}`}>
-                    {getIcon(notif.type)}
-                  </div>
-                  <div className="ml-4 flex-1">
-                    <p className={`text-sm ${isUnread ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>
-                      {notif.title}
+                  {getIcon(notif.type)}
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start gap-2">
+                      <p className={`text-sm ${isUnread ? 'font-bold text-slate-900' : 'font-semibold text-slate-700'}`}>
+                        {notif.title}
+                      </p>
+                      <span className="text-[11px] text-slate-400 whitespace-nowrap shrink-0">
+                        {formatDate(notif.createdAt)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                      {notif.message}
                     </p>
-                    <p className="text-xs text-gray-600 mt-0.5 leading-relaxed">{notif.message}</p>
-                    <p className="text-[11px] text-gray-400 mt-1">{formatDate(notif.createdAt)}</p>
                   </div>
+
+                  {isUnread && (
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
+                  )}
                 </div>
               );
             })}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }
