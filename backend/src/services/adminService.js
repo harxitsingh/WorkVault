@@ -3,6 +3,7 @@ import { Service } from '../models/Service.js';
 import { Deal } from '../models/Deal.js';
 import { Transaction } from '../models/Transaction.js';
 import { Dispute } from '../models/Dispute.js';
+import * as disputeService from './disputeService.js';
 import mongoose from 'mongoose';
 
 const helperFindDispute = async (id) => {
@@ -74,40 +75,34 @@ export const getAllDisputes = async () => {
 };
 
 /**
- * Admin resolves a dispute
+ * Canonical Admin resolves a dispute (consolidated with disputeService)
  */
 export const resolveDispute = async (id, data, adminUser) => {
-  const dispute = await helperFindDispute(id);
-  if (!dispute) {
-    const error = new Error('Dispute not found');
+  return await disputeService.resolveDispute(id, data, adminUser);
+};
+
+/**
+ * Update user status (Active / Suspended)
+ */
+export const updateUserStatus = async (id, { status, isActive }) => {
+  let user = null;
+  if (mongoose.Types.ObjectId.isValid(id)) {
+    user = await User.findById(id);
+  } else {
+    user = await User.findOne({ _id: id });
+  }
+  if (!user) {
+    const error = new Error('User not found');
     error.statusCode = 404;
     throw error;
   }
 
-  if (dispute.status === 'CLOSED' || dispute.status === 'closed') {
-    const error = new Error('Dispute is already closed');
-    error.statusCode = 400;
-    throw error;
+  if (status !== undefined) {
+    user.status = status;
+  } else if (isActive !== undefined) {
+    user.status = isActive ? 'Active' : 'Suspended';
   }
 
-  dispute.status = 'RESOLVED';
-  dispute.resolution = data.resolution || 'Resolved by admin';
-  dispute.resolvedBy = adminUser._id || adminUser.id;
-  await dispute.save();
-
-  // Optionally update deal status based on admin action
-  if (data.dealAction) {
-    const deal = await helperFindDeal(dispute.deal);
-    if (deal) {
-      if (data.dealAction === 'cancel') {
-        deal.status = 'CANCELLED';
-      } else if (data.dealAction === 'resume') {
-        deal.status = 'IN_PROGRESS';
-      }
-      await deal.save();
-    }
-  }
-
-  const updated = await helperFindDispute(dispute._id);
-  return updated.toJSON();
+  await user.save();
+  return user.toJSON();
 };

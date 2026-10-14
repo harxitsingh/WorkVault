@@ -54,3 +54,13 @@ export const resolveDispute = async (req, res, next) => {
     next(error);
   }
 };
+
+export const updateUserStatus = async (req, res, next) => {
+  try {
+    const updated = await adminService.updateUserStatus(req.params.id, req.body);
+    sendSuccess(res, updated, 'User status updated successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+

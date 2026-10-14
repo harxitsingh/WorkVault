@@ -23,6 +23,9 @@ router.get('/transactions', adminController.getTransactions);
 // GET /api/admin/disputes
 router.get('/disputes', adminController.getDisputes);
 
+// PUT /api/admin/users/:id/status
+router.put('/users/:id/status', adminController.updateUserStatus);
+
 // PUT /api/admin/disputes/:id/resolve
 router.put('/disputes/:id/resolve', adminController.resolveDispute);
 
