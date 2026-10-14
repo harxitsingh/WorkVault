@@ -8,6 +8,7 @@ import { ChevronRight, Upload, X, Link as LinkIcon, FileText, Info } from 'lucid
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import toast from 'react-hot-toast';
 
 const SubmitDelivery = () => {
@@ -42,7 +43,7 @@ const SubmitDelivery = () => {
         const data = await dealService.getDealById(id);
         if (isMounted) setDeal(data);
       } catch (err) {
-        toast.error('Failed to load project details');
+        toast.error(err.message || 'Failed to load project details');
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -110,7 +111,7 @@ const SubmitDelivery = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
+      <div className="flex justify-center items-center py-24 min-h-[50vh]">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -120,7 +121,7 @@ const SubmitDelivery = () => {
     return (
       <div className="p-12 text-center text-slate-500">
         <h2 className="text-xl font-bold text-slate-800 mb-2">Order Not Found</h2>
-        <Link to="/freelancer/deals" className="text-indigo-600 font-semibold hover:underline">
+        <Link to="/freelancer/deals" className="text-brand-primary font-semibold hover:underline">
           ← Back to Orders
         </Link>
       </div>
@@ -133,26 +134,26 @@ const SubmitDelivery = () => {
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
       <div className="flex items-center text-sm text-slate-500 mb-2">
-        <Link to="/freelancer" className="hover:text-indigo-600">Dashboard</Link>
+        <Link to="/freelancer" className="hover:text-brand-primary">Dashboard</Link>
         <ChevronRight size={14} className="mx-1" />
-        <Link to="/freelancer/deals" className="hover:text-indigo-600">My Orders</Link>
+        <Link to="/freelancer/deals" className="hover:text-brand-primary">My Orders</Link>
         <ChevronRight size={14} className="mx-1" />
-        <Link to={`/freelancer/deals/${deal.id || deal._id}`} className="hover:text-indigo-600">
+        <Link to={`/freelancer/deals/${deal.id || deal._id}`} className="hover:text-brand-primary">
           Order #{deal.id ? deal.id.substring(0, 8) : deal._id}
         </Link>
         <ChevronRight size={14} className="mx-1" />
-        <span className="text-slate-900 font-medium">Submit Delivery</span>
+        <span className="text-slate-900 font-semibold">Submit Delivery</span>
       </div>
 
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Submit Final Delivery</h1>
-        <p className="text-slate-500">Upload your completed project deliverables and brief the client.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Submit Final Delivery</h1>
+        <p className="text-sm text-slate-500 mt-0.5">Upload your completed project deliverables and brief the client.</p>
       </div>
 
       {/* Order Summary Card */}
-      <Card className="p-5 bg-indigo-50/50 border-indigo-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <Card className="p-5 bg-blue-50/40 border-blue-100/80 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <p className="text-xs uppercase font-bold tracking-wider text-indigo-600 mb-1">Client: {clientName}</p>
+          <p className="text-xs uppercase font-bold tracking-wider text-brand-primary mb-1">Client: {clientName}</p>
           <h3 className="font-bold text-slate-900 text-lg">{dealTitle}</h3>
         </div>
         <div className="flex gap-6 text-sm">
@@ -168,32 +169,32 @@ const SubmitDelivery = () => {
       </Card>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <Card className="p-6">
+        <Card className="p-6 rounded-2xl shadow-2xs">
           <div className="space-y-6">
             
             {/* Message */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Delivery Summary & Notes *</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Delivery Summary & Notes *</label>
               <textarea
                 {...register("message", { required: "Message is required", minLength: { value: 15, message: "Minimum 15 characters" } })}
                 rows="5"
                 placeholder="Explain what has been completed, instructions on how to use files, access credentials if any, or next steps..."
-                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-y text-sm"
+                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none resize-y text-sm"
               ></textarea>
               {errors.message && <p className="text-red-500 text-xs mt-1">{errors.message.message}</p>}
             </div>
 
             {/* File Upload */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Deliverable Files</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Deliverable Files</label>
               
-              <label className="border-2 border-dashed border-slate-300 rounded-lg p-6 flex flex-col items-center justify-center bg-slate-50 text-center mb-4 transition-colors hover:border-indigo-400 hover:bg-indigo-50/20 cursor-pointer block">
+              <label className="border-2 border-dashed border-slate-200 rounded-2xl p-6 flex flex-col items-center justify-center bg-slate-50/60 text-center mb-4 transition-colors hover:border-brand-primary hover:bg-blue-50/20 cursor-pointer block">
                 <Upload size={32} className="text-slate-400 mb-2 mx-auto" />
-                <p className="text-slate-700 font-medium text-sm mb-1">
+                <p className="text-slate-700 font-semibold text-sm mb-1">
                   {isUploading ? 'Uploading file...' : 'Click to browse or drop project files here'}
                 </p>
                 <p className="text-slate-400 text-xs mb-3">ZIP, PDF, PNG, JPG, or design files up to 10MB</p>
-                <span className="inline-block px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-md text-xs font-bold hover:bg-indigo-100">
+                <span className="inline-block px-3 py-1.5 bg-blue-50 text-brand-primary rounded-xl text-xs font-bold hover:bg-blue-100">
                   {isUploading ? 'Uploading...' : 'Select File'}
                 </span>
                 <input
@@ -209,20 +210,20 @@ const SubmitDelivery = () => {
                 <div className="space-y-2">
                   <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Attached Deliverables ({uploadedFiles.length})</h4>
                   {uploadedFiles.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border border-slate-200 rounded-lg bg-white shadow-sm">
+                    <div key={index} className="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-white shadow-2xs">
                       <div className="flex items-center space-x-3 overflow-hidden">
-                        <div className="p-2 bg-indigo-50 text-indigo-600 rounded">
+                        <div className="p-2 bg-blue-50 text-brand-primary rounded-lg">
                           <FileText size={20} />
                         </div>
                         <div className="truncate">
                           <p className="text-sm font-medium text-slate-900 truncate">{file.name || file.fileName}</p>
-                          <p className="text-xs text-slate-500">{file.size}</p>
+                          <p className="text-xs text-slate-400">{file.size}</p>
                         </div>
                       </div>
                       <button 
                         type="button" 
                         onClick={() => removeFile(index)}
-                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                       >
                         <X size={18} />
                       </button>
@@ -234,8 +235,8 @@ const SubmitDelivery = () => {
 
             {/* External Links */}
             <div className="pt-4 border-t border-slate-100">
-              <label className="block text-sm font-medium text-slate-700 mb-1">External Links (Optional)</label>
-              <p className="text-xs text-slate-500 mb-3">Add links to live demo, GitHub repository, Figma artboards, or Cloud storage.</p>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">External Links (Optional)</label>
+              <p className="text-xs text-slate-400 mb-3">Add links to live demo, GitHub repository, Figma artboards, or Cloud storage.</p>
               
               <div className="space-y-3">
                 {fields.map((field, index) => (
@@ -247,17 +248,17 @@ const SubmitDelivery = () => {
                       <input
                         {...register(`links.${index}.url`)}
                         placeholder="https://..."
-                        className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                        className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary outline-none text-sm"
                       />
                     </div>
                     {fields.length > 1 && (
-                      <button type="button" onClick={() => remove(index)} className="p-2 text-slate-400 hover:text-red-500 bg-slate-50 rounded-lg">
+                      <button type="button" onClick={() => remove(index)} className="p-2 text-slate-400 hover:text-red-500 bg-slate-50 rounded-xl">
                         <X size={20} />
                       </button>
                     )}
                   </div>
                 ))}
-                <button type="button" onClick={() => append({ url: '' })} className="text-indigo-600 text-sm font-medium mt-2 flex items-center">
+                <button type="button" onClick={() => append({ url: '' })} className="text-brand-primary text-xs font-semibold mt-2 flex items-center hover:underline">
                   + Add another link
                 </button>
               </div>
@@ -266,8 +267,8 @@ const SubmitDelivery = () => {
           </div>
         </Card>
 
-        <div className="flex items-center gap-3 bg-amber-50 text-amber-800 p-4 rounded-lg border border-amber-200/60">
-          <Info size={20} className="flex-shrink-0 text-amber-600" />
+        <div className="flex items-center gap-3 bg-amber-50 text-amber-800 p-4 rounded-xl border border-amber-200/60">
+          <Info size={20} className="shrink-0 text-amber-600" />
           <p className="text-xs sm:text-sm">Once submitted, the client will receive an instant notification and will review the deliverables before approving funds release from escrow.</p>
         </div>
 
@@ -282,22 +283,19 @@ const SubmitDelivery = () => {
       </form>
 
       {/* Confirmation Modal */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <Card className="w-full max-w-md p-6">
-            <h3 className="text-lg font-bold text-slate-900 mb-2">Submit Delivery to Client?</h3>
-            <p className="text-slate-600 text-sm mb-6">Are you sure you are ready to submit this deliverable package? The client will review your submission and release escrow payment upon approval.</p>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowConfirmModal(false)} disabled={isSubmitting}>Cancel</Button>
-              <Button onClick={handleConfirmSubmit} disabled={isSubmitting}>
-                {isSubmitting ? <LoadingSpinner size="sm" /> : 'Yes, Submit Deliverable'}
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleConfirmSubmit}
+        title="Submit Delivery to Client"
+        message="Are you sure you are ready to submit this deliverable package? The client will review your submission and release escrow payment upon approval."
+        confirmText="Yes, Submit Deliverable"
+        variant="warning"
+        loading={isSubmitting}
+      />
     </div>
   );
 };
 
 export default SubmitDelivery;
+

@@ -18,8 +18,9 @@ import { disputeService } from '../../services/disputeService';
 import { statsService } from '../../services/statsService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import StatusBadge from '../../components/common/StatusBadge';
+import Avatar from '../../components/common/Avatar';
 import toast from 'react-hot-toast';
-import { getImageUrl, handleImageError } from '../../utils/imageHelper';
 
 export default function FreelancerDealDetails() {
   const { id } = useParams();
@@ -175,13 +176,11 @@ export default function FreelancerDealDetails() {
       {/* Header Banner */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">{deal.title}</h1>
-            <span className="px-3 py-1 text-xs font-bold uppercase rounded-full bg-indigo-100 text-indigo-800">
-              {deal.status}
-            </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{deal.title}</h1>
+            <StatusBadge status={deal.status} />
           </div>
-          <p className="text-gray-600 mt-1 max-w-2xl">{deal.description || 'Project deliverables and milestone execution.'}</p>
+          <p className="text-slate-600 mt-1 max-w-2xl">{deal.description || 'Project deliverables and milestone execution.'}</p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -256,22 +255,10 @@ export default function FreelancerDealDetails() {
                         </div>
 
                         <div className="text-right sm:shrink-0">
-                          <p className="text-lg font-black text-gray-900">{formatCurrency(m.amount)}</p>
-                          <span
-                            className={`inline-block px-2.5 py-0.5 text-xs font-bold rounded-full ${
-                              isReleased
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : isSubmitted
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : isFunded
-                                    ? 'bg-blue-100 text-blue-800'
-                                    : isDisputed
-                                      ? 'bg-rose-100 text-rose-800'
-                                      : 'bg-gray-100 text-gray-700'
-                            }`}
-                          >
-                            {m.status}
-                          </span>
+                          <p className="text-lg font-black text-slate-900">{formatCurrency(m.amount)}</p>
+                          <div className="mt-1 flex justify-end">
+                            <StatusBadge status={m.status} />
+                          </div>
                         </div>
                       </div>
 
@@ -355,19 +342,16 @@ export default function FreelancerDealDetails() {
         {/* Right Col: Client Info & Financials */}
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="font-bold text-gray-900 text-base mb-4">Client Information</h3>
+            <h3 className="font-bold text-slate-900 text-base mb-4">Client Information</h3>
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-lg overflow-hidden">
-                <img
-                  src={getImageUrl(client.profileImage || client.avatar, 'avatar')}
-                  alt={client.name || 'Client'}
-                  onError={(e) => handleImageError(e, 'avatar')}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              <Avatar
+                src={client.profileImage || client.avatar}
+                name={client.name}
+                size="lg"
+              />
               <div>
-                <h4 className="font-bold text-gray-900">{client.name || 'Client'}</h4>
-                <p className="text-xs text-gray-500">{client.email || 'Verified Client'}</p>
+                <h4 className="font-bold text-slate-900">{client.name || 'Client'}</h4>
+                <p className="text-xs text-slate-500">{client.email || 'Verified Client'}</p>
               </div>
             </div>
 

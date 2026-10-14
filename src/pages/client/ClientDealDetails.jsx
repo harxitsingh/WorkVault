@@ -21,8 +21,10 @@ import { reviewService } from '../../services/reviewService';
 import { paymentService } from '../../services/paymentService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import StatusBadge from '../../components/common/StatusBadge';
+import Avatar from '../../components/common/Avatar';
+import ConfirmModal from '../../components/common/ConfirmModal';
 import toast from 'react-hot-toast';
-import { getImageUrl, handleImageError } from '../../utils/imageHelper';
 
 export default function ClientDealDetails() {
   const { id } = useParams();
@@ -38,6 +40,9 @@ export default function ClientDealDetails() {
 
   const [showFundModal, setShowFundModal] = useState(null); // stores milestone object to fund
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
+  const [confirmApproveMilestone, setConfirmApproveMilestone] = useState(null);
+  const [isApproving, setIsApproving] = useState(false);
 
   const [showRevisionModal, setShowRevisionModal] = useState(null); // milestone object
   const [revisionNotes, setRevisionNotes] = useState('');
@@ -132,13 +137,18 @@ export default function ClientDealDetails() {
   };
 
   // Approve Milestone & Release Payment
-  const handleApproveMilestone = async (milestoneId) => {
+  const handleConfirmApprove = async () => {
+    if (!confirmApproveMilestone) return;
     try {
-      await milestoneService.approveAndReleaseMilestone(milestoneId);
+      setIsApproving(true);
+      await milestoneService.approveAndReleaseMilestone(confirmApproveMilestone._id || confirmApproveMilestone.id);
       toast.success('Milestone approved! Funds released to freelancer.');
+      setConfirmApproveMilestone(null);
       fetchDealAndMilestones();
     } catch (err) {
       toast.error(err.message || 'Failed to approve milestone');
+    } finally {
+      setIsApproving(false);
     }
   };
 
@@ -237,11 +247,9 @@ export default function ClientDealDetails() {
       {/* Header Banner */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-gray-900">{deal.title}</h1>
-            <span className="px-3 py-1 text-xs font-bold uppercase rounded-full bg-indigo-100 text-indigo-800">
-              {deal.status}
-            </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">{deal.title}</h1>
+            <StatusBadge status={deal.status} />
           </div>
           <p className="text-gray-600 mt-1 max-w-2xl">{deal.description || 'Project deal with milestone escrow protection.'}</p>
         </div>
@@ -272,7 +280,7 @@ export default function ClientDealDetails() {
 
           <button
             onClick={() => setShowAddMilestone(true)}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg transition-colors flex items-center shadow-sm"
+            className="px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-white text-sm font-semibold rounded-xl transition-colors flex items-center shadow-xs"
           >
             <Plus className="w-4 h-4 mr-1.5" />
             Add Milestone
@@ -341,22 +349,10 @@ export default function ClientDealDetails() {
                         </div>
 
                         <div className="text-right sm:shrink-0">
-                          <p className="text-lg font-black text-gray-900">{formatCurrency(m.amount)}</p>
-                          <span
-                            className={`inline-block px-2.5 py-0.5 text-xs font-bold rounded-full ${
-                              isReleased
-                                ? 'bg-emerald-100 text-emerald-800'
-                                : isSubmitted
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : isFunded
-                                    ? 'bg-blue-100 text-blue-800'
-                                    : isDisputed
-                                      ? 'bg-rose-100 text-rose-800'
-                                      : 'bg-gray-100 text-gray-700'
-                            }`}
-                          >
-                            {m.status}
-                          </span>
+                          <p className="text-lg font-black text-slate-900">{formatCurrency(m.amount)}</p>
+                          <div className="mt-1 flex justify-end">
+                            <StatusBadge status={m.status} />
+                          </div>
                         </div>
                       </div>
 
@@ -414,8 +410,8 @@ export default function ClientDealDetails() {
 
                           <div className="mt-4 flex flex-wrap gap-2 pt-2 border-t border-amber-100">
                             <button
-                              onClick={() => handleApproveMilestone(m._id || m.id)}
-                              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center"
+                              onClick={() => setConfirmApproveMilestone(m)}
+                              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center shadow-xs"
                             >
                               <CheckCircle className="w-4 h-4 mr-1.5" />
                               Approve & Release Payment
@@ -465,22 +461,19 @@ export default function ClientDealDetails() {
         {/* Right Col: Freelancer Info & Financial Summary */}
         <div className="space-y-6">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="font-bold text-gray-900 text-base mb-4">Assigned Freelancer</h3>
+            <h3 className="font-bold text-slate-900 text-base mb-4">Assigned Freelancer</h3>
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-lg overflow-hidden">
-                <img
-                  src={getImageUrl(freelancer.profileImage || freelancer.avatar, 'avatar')}
-                  alt={freelancer.name || 'Freelancer'}
-                  onError={(e) => handleImageError(e, 'avatar')}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+              <Avatar
+                src={freelancer.profileImage || freelancer.avatar}
+                name={freelancer.name}
+                size="lg"
+              />
               <div>
-                <h4 className="font-bold text-gray-900">{freelancer.name || 'Freelancer'}</h4>
-                <p className="text-xs text-gray-500">{freelancer.title || 'Verified Specialist'}</p>
+                <h4 className="font-bold text-slate-900">{freelancer.name || 'Freelancer'}</h4>
+                <p className="text-xs text-slate-500">{freelancer.title || 'Verified Specialist'}</p>
                 <Link
                   to={`/freelancer/${freelancer._id || freelancer.id}`}
-                  className="text-xs text-indigo-600 hover:underline mt-0.5 inline-flex items-center"
+                  className="text-xs text-brand-primary hover:underline mt-0.5 inline-flex items-center"
                 >
                   View Trust Profile <ExternalLink className="w-3 h-3 ml-1" />
                 </Link>
@@ -815,7 +808,7 @@ export default function ClientDealDetails() {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold"
+                  className="px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-white rounded-lg text-sm font-semibold"
                 >
                   Submit Review
                 </button>
@@ -824,6 +817,18 @@ export default function ClientDealDetails() {
           </div>
         </div>
       )}
+
+      {/* CONFIRM APPROVE MODAL */}
+      <ConfirmModal
+        isOpen={Boolean(confirmApproveMilestone)}
+        onClose={() => setConfirmApproveMilestone(null)}
+        onConfirm={handleConfirmApprove}
+        title="Approve Work & Release Payment"
+        message={`Are you sure you want to approve "${confirmApproveMilestone?.title}" and release ${confirmApproveMilestone ? formatCurrency(confirmApproveMilestone.amount) : ''} from escrow to the freelancer? This release is irreversible.`}
+        confirmText="Release Funds"
+        variant="warning"
+        loading={isApproving}
+      />
     </div>
   );
 }

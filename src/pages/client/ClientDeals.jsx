@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Calendar, ChevronRight, Clock, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Search, Calendar, ChevronRight, Briefcase, PlusCircle } from 'lucide-react';
 import { dealService } from '../../services/dealService';
 import { formatCurrency, formatDate } from '../../utils/formatters';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import StatusBadge from '../../components/common/StatusBadge';
+import EmptyState from '../../components/common/EmptyState';
 import toast from 'react-hot-toast';
 
 export default function ClientDeals() {
@@ -20,9 +22,9 @@ export default function ClientDeals() {
       try {
         setLoading(true);
         const data = await dealService.getDeals();
-        if (isMounted) setDeals(data);
+        if (isMounted) setDeals(data || []);
       } catch (err) {
-        if (isMounted) toast.error('Failed to load deals');
+        if (isMounted) toast.error(err.message || 'Failed to load deals');
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -48,48 +50,26 @@ export default function ClientDeals() {
     return matchesTab && matchesSearch;
   });
 
-  const getStatusBadge = (status) => {
-    const s = (status || '').toUpperCase();
-    switch (s) {
-      case 'FUNDED':
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 border border-blue-200">Escrow Funded</span>;
-      case 'IN_PROGRESS':
-      case 'ACTIVE':
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200">In Progress</span>;
-      case 'SUBMITTED':
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-100 text-amber-800 border border-amber-200">Review Pending</span>;
-      case 'APPROVED':
-      case 'RELEASED':
-      case 'COMPLETED':
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">Payment Released</span>;
-      case 'DISPUTED':
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-rose-100 text-rose-800 border border-rose-200">In Dispute</span>;
-      case 'CANCELLED':
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 border border-gray-200">Cancelled</span>;
-      default:
-        return <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-800 border border-slate-200">{status}</span>;
-    }
-  };
-
   return (
-    <div className="p-6 max-w-7xl mx-auto min-h-screen">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/80">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Client Projects & Deals</h1>
-          <p className="text-gray-600 mt-1">Manage milestone progress, escrow funding, and work approvals.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Client Projects & Deals</h1>
+          <p className="text-sm text-slate-500 mt-1">Manage milestone progress, escrow funding, and work approvals.</p>
         </div>
         <Link
-          to="/services"
-          className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm"
+          to="/marketplace"
+          className="inline-flex items-center justify-center px-4 py-2 bg-brand-primary hover:bg-brand-primary-hover text-white rounded-xl text-sm font-semibold transition-colors shadow-xs"
         >
+          <PlusCircle className="w-4 h-4 mr-2" />
           Hire a Freelancer
         </Link>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6">
+      <div className="bg-white rounded-2xl shadow-2xs border border-slate-200/80 overflow-hidden">
         {/* Tab & Search Bar */}
-        <div className="p-4 border-b border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4 bg-gray-50">
-          <div className="flex gap-2 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
+        <div className="p-4 border-b border-slate-200/80 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
+          <div className="flex gap-1.5 overflow-x-auto w-full md:w-auto pb-2 md:pb-0 scrollbar-none">
             {tabs.map((tab) => {
               const count = tab === 'All'
                 ? deals.length
@@ -105,75 +85,89 @@ export default function ClientDeals() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-xl whitespace-nowrap transition-colors ${
                     activeTab === tab
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
+                      ? 'bg-brand-primary text-white shadow-2xs'
+                      : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >
-                  {tab} ({count})
+                  {tab === 'All' ? 'All Deals' : tab.replace('_', ' ')} ({count})
                 </button>
               );
             })}
           </div>
 
-          <div className="relative w-full md:w-64">
-            <Search className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
+          <div className="relative w-full md:w-72">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input
               type="text"
-              placeholder="Search deals..."
+              placeholder="Search projects or talent..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full pl-9 pr-4 py-1.5 text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all placeholder:text-slate-400"
             />
           </div>
         </div>
 
         {/* Deals Table */}
         {loading ? (
-          <div className="py-16 flex justify-center">
+          <div className="py-20 flex justify-center">
             <LoadingSpinner size="lg" />
           </div>
         ) : filteredDeals.length === 0 ? (
-          <div className="py-16 text-center text-gray-500">
-            <ShieldCheck className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-            <p className="text-base font-medium">No deals found in this category</p>
-            <p className="text-sm mt-1">Browse services to start a milestone-based project.</p>
+          <div className="p-12">
+            <EmptyState
+              icon={Briefcase}
+              title="No deals found"
+              description={searchQuery ? "No contracts match your search criteria." : "You have no contracts in this category."}
+              action={
+                <Link
+                  to="/marketplace"
+                  className="inline-flex items-center px-4 py-2 bg-brand-primary text-white rounded-xl text-sm font-semibold hover:bg-brand-primary-hover shadow-xs"
+                >
+                  Explore Marketplace
+                </Link>
+              }
+            />
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-slate-100">
             {filteredDeals.map((deal) => {
               const freelancerName = deal.freelancer?.name || deal.freelancerName || 'Freelancer';
               return (
                 <Link
                   key={deal.id || deal._id}
                   to={`/client/deals/${deal.id || deal._id}`}
-                  className="p-5 flex flex-col md:flex-row md:items-center justify-between hover:bg-slate-50 transition-colors gap-4 block"
+                  className="p-5 flex flex-col md:flex-row md:items-center justify-between hover:bg-slate-50/70 transition-colors gap-4 block"
                 >
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                      <h3 className="font-semibold text-gray-900 text-base hover:text-indigo-600 transition-colors">
+                  <div className="space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="font-bold text-slate-900 text-base hover:text-brand-primary transition-colors">
                         {deal.title}
                       </h3>
-                      {getStatusBadge(deal.status)}
+                      <StatusBadge status={deal.status} />
                     </div>
-                    <p className="text-sm text-gray-500">
-                      Freelancer: <span className="font-medium text-gray-700">{freelancerName}</span>
+                    <div className="flex items-center text-xs text-slate-500 gap-4">
+                      <span>
+                        Freelancer: <span className="font-semibold text-slate-700">{freelancerName}</span>
+                      </span>
                       {deal.deadline && (
-                        <span className="ml-4 inline-flex items-center">
+                        <span className="inline-flex items-center text-slate-400">
                           <Calendar className="w-3.5 h-3.5 mr-1" />
                           Due: {formatDate(deal.deadline)}
                         </span>
                       )}
-                    </p>
+                    </div>
                   </div>
 
                   <div className="flex items-center justify-between md:justify-end gap-6 shrink-0">
                     <div className="text-right">
-                      <p className="text-lg font-bold text-gray-900">{formatCurrency(deal.amount)}</p>
-                      <p className="text-xs text-gray-500">Milestone Escrow</p>
+                      <p className="text-base font-bold text-slate-900">{formatCurrency(deal.amount)}</p>
+                      <p className="text-[11px] text-slate-400">Milestone Escrow</p>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400" />
+                    <div className="p-1 text-slate-400 hover:text-brand-primary">
+                      <ChevronRight className="w-5 h-5" />
+                    </div>
                   </div>
                 </Link>
               );
@@ -184,3 +178,4 @@ export default function ClientDeals() {
     </div>
   );
 }
+
