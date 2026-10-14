@@ -21,8 +21,8 @@ export const registerValidator = [
     .withMessage('Password must be at least 6 characters long'),
   body('role')
     .optional()
-    .isIn(['client', 'freelancer', 'admin'])
-    .withMessage('Role must be client, freelancer, or admin')
+    .isIn(['client', 'freelancer'])
+    .withMessage('Role must be client or freelancer')
 ];
 
 export const loginValidator = [

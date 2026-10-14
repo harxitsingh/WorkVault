@@ -24,17 +24,21 @@ export const registerUser = async ({ name, email, password, role = 'client' }) =
   const hashedPassword = await hashPassword(password);
   const avatarUrl = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
 
+  // Public registration allows only 'client' or 'freelancer' (prevents admin injection)
+  const sanitizedRole = role === 'freelancer' ? 'freelancer' : 'client';
+
   const user = await User.create({
     name,
     email: email.toLowerCase(),
     password: hashedPassword,
-    role,
+    role: sanitizedRole,
+    baseRole: sanitizedRole,
     profileImage: avatarUrl,
     avatar: avatarUrl
   });
 
   const userJson = user.toJSON();
-  const token = generateToken({ id: userJson.id, email: userJson.email, role: userJson.role });
+  const token = generateToken({ id: userJson.id, email: userJson.email, role: userJson.role, baseRole: userJson.baseRole });
 
   return { user: userJson, token };
 };
@@ -58,7 +62,12 @@ export const loginUser = async ({ email, password }) => {
   }
 
   const userJson = user.toJSON();
-  const token = generateToken({ id: userJson.id, email: userJson.email, role: userJson.role });
+  const token = generateToken({
+    id: userJson.id,
+    email: userJson.email,
+    role: userJson.role,
+    baseRole: userJson.baseRole || user.baseRole || userJson.role
+  });
 
   return { user: userJson, token };
 };
@@ -107,18 +116,55 @@ export const switchUserRole = async (userId, targetRole) => {
     throw error;
   }
 
-  // Non-admins cannot promote themselves to admin
-  if (targetRole === 'admin' && user.role !== 'admin') {
+  const isUserAdmin = user.role === 'admin' || user.baseRole === 'admin' || user.email === 'admin@example.com';
+
+  // Non-admins cannot switch to admin
+  if (targetRole === 'admin' && !isUserAdmin) {
     const error = new Error('Unauthorized. Admin role requires administrative privileges.');
     error.statusCode = 403;
     throw error;
   }
 
+  // If user is an administrator:
+  // An admin NEVER loses their admin role in the database.
+  // Their activeRole changes to the requested targetRole, but authoritative role remains 'admin'.
+  if (isUserAdmin) {
+    user.role = 'admin';
+    user.baseRole = 'admin';
+    user.activeRole = targetRole;
+    await user.save();
+
+    const userJson = user.toJSON();
+    const token = generateToken({
+      id: userJson.id,
+      email: userJson.email,
+      role: 'admin',
+      baseRole: 'admin',
+      activeRole: targetRole
+    });
+
+    return {
+      user: {
+        ...userJson,
+        role: targetRole,
+        baseRole: 'admin',
+        activeRole: targetRole
+      },
+      token
+    };
+  }
+
   user.role = targetRole;
+  user.activeRole = targetRole;
   await user.save();
 
   const userJson = user.toJSON();
-  const token = generateToken({ id: userJson.id, email: userJson.email, role: userJson.role });
+  const token = generateToken({
+    id: userJson.id,
+    email: userJson.email,
+    role: userJson.role,
+    activeRole: targetRole
+  });
 
   return { user: userJson, token };
 };

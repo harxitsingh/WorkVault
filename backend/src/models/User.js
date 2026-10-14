@@ -24,6 +24,11 @@ const userSchema = new mongoose.Schema(
       enum: ['client', 'freelancer', 'admin'],
       default: 'client'
     },
+    baseRole: {
+      type: String,
+      enum: ['client', 'freelancer', 'admin'],
+      default: 'client'
+    },
     profileImage: {
       type: String,
       default: ''
@@ -67,6 +72,14 @@ const userSchema = new mongoose.Schema(
     completedProjects: {
       type: Number,
       default: 0
+    },
+    status: {
+      type: String,
+      default: 'Active'
+    },
+    settings: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
     }
   },
   {
@@ -77,6 +90,7 @@ const userSchema = new mongoose.Schema(
         ret.id = ret._id.toString();
         if (!ret.profileImage && ret.avatar) ret.profileImage = ret.avatar;
         if (!ret.avatar && ret.profileImage) ret.avatar = ret.profileImage;
+        if (!ret.baseRole) ret.baseRole = ret.role;
         delete ret.password;
         delete ret.__v;
         return ret;

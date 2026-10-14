@@ -132,6 +132,27 @@ async function testAuth() {
     name: 'Y', email: 'y@y.com', password: '12'
   });
   assert('Short password rejected', shortPw.success === false);
+
+  // Security regression: Public admin registration prevented (SEC-01 / F1)
+  const adminReg = await req('POST', '/auth/register', {
+    name: 'Attacker Admin',
+    email: `attacker_${Date.now()}@example.com`,
+    password: 'password123',
+    role: 'admin'
+  });
+  assert('Public admin registration rejected (400)', adminReg.success === false && adminReg.status === 400);
+
+  // Security regression: Client cannot switch to admin role
+  const clientSwitchAdmin = await req('POST', '/auth/switch-role', { role: 'admin' }, clientToken);
+  assert('Client cannot switch to admin (403)', clientSwitchAdmin.success === false && clientSwitchAdmin.status === 403);
+
+  // Role Switch & Authority Persistence (AUTH-01 / F2): Admin switches view to freelancer and retains admin access
+  const adminSwitchFL = await req('POST', '/auth/switch-role', { role: 'freelancer' }, adminToken);
+  assert('Admin can switch active view to freelancer', adminSwitchFL.success === true && adminSwitchFL.data.user.role === 'freelancer');
+  const adminAccessAfterSwitch = await req('GET', '/admin/users', null, adminToken);
+  assert('Admin retains admin authority after view switch', adminAccessAfterSwitch.success === true);
+  // Switch back to admin
+  await req('POST', '/auth/switch-role', { role: 'admin' }, adminToken);
 }
 
 async function testUsers() {
@@ -525,6 +546,15 @@ async function testAdmin() {
       dealAction: 'resume'
     }, adminToken);
     assert('Admin: resolve dispute', resolve.success && resolve.data.status === 'RESOLVED');
+  }
+
+  // Admin updates user status (suspend and activate)
+  const targetUser = users.data?.find(u => u.email === 'client@example.com') || users.data?.[0];
+  if (targetUser) {
+    const suspendRes = await req('PUT', `/admin/users/${targetUser.id || targetUser._id}/status`, { status: 'Suspended' }, adminToken);
+    assert('Admin: suspend user', suspendRes.success && suspendRes.data.status === 'Suspended');
+    const activateRes = await req('PUT', `/admin/users/${targetUser.id || targetUser._id}/status`, { status: 'Active' }, adminToken);
+    assert('Admin: activate user', activateRes.success && activateRes.data.status === 'Active');
   }
 }
 
