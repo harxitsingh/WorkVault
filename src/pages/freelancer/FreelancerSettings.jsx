@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Save, Bell, Lock, Globe, CreditCard } from 'lucide-react';
+import { Save, Bell, Lock, Globe, CreditCard, KeyRound, ShieldCheck } from 'lucide-react';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import toast from 'react-hot-toast';
@@ -16,7 +16,7 @@ const FreelancerSettings = () => {
   const savedLocal = (() => {
     try {
       return JSON.parse(localStorage.getItem(`workvault_freelancer_settings_${userId}`)) || {};
-    } catch (e) {
+    } catch {
       return {};
     }
   })();
@@ -27,16 +27,10 @@ const FreelancerSettings = () => {
         newOrders: true,
         messages: true,
         payments: true,
-        marketing: false,
         reminders: true
-      },
-      pushNotifications: {
-        newOrders: true,
-        messages: true
       },
       visibility: {
         profilePublic: true,
-        showEarnings: false,
         availableForWork: true
       }
     }
@@ -53,11 +47,10 @@ const FreelancerSettings = () => {
       });
       updateUserState(updatedUser);
       localStorage.setItem(`workvault_freelancer_settings_${userId}`, JSON.stringify(data));
-      toast.success('Settings saved successfully');
+      toast.success('Freelancer settings saved successfully');
     } catch (error) {
-      // Fallback save to localStorage
       localStorage.setItem(`workvault_freelancer_settings_${userId}`, JSON.stringify(data));
-      toast.success('Settings saved successfully');
+      toast.success('Freelancer settings saved locally');
     } finally {
       setIsSaving(false);
     }
@@ -66,189 +59,185 @@ const FreelancerSettings = () => {
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-12">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
-        <p className="text-slate-500">Manage your account preferences and notifications.</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Freelancer Settings</h1>
+        <p className="text-xs sm:text-sm text-slate-500 mt-0.5">Manage work availability, order alerts, and payout preferences.</p>
       </div>
 
       <div className="flex flex-col md:flex-row gap-6">
-        {/* Sidebar */}
-        <div className="w-full md:w-64 space-y-1 shrink-0">
-          <button
-            onClick={() => setActiveTab('notifications')}
-            className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-              activeTab === 'notifications' 
-                ? 'bg-indigo-50 text-indigo-700' 
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <Bell size={18} className="mr-3" />
-            Notifications
-          </button>
-          <button
-            onClick={() => setActiveTab('security')}
-            className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-              activeTab === 'security' 
-                ? 'bg-indigo-50 text-indigo-700' 
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <Lock size={18} className="mr-3" />
-            Password & Security
-          </button>
-          <button
-            onClick={() => setActiveTab('privacy')}
-            className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-              activeTab === 'privacy' 
-                ? 'bg-indigo-50 text-indigo-700' 
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <Globe size={18} className="mr-3" />
-            Privacy & Visibility
-          </button>
-          <button
-            onClick={() => setActiveTab('payments')}
-            className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
-              activeTab === 'payments' 
-                ? 'bg-indigo-50 text-indigo-700' 
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            }`}
-          >
-            <CreditCard size={18} className="mr-3" />
-            Withdrawal Methods
-          </button>
+        {/* Navigation Sidebar */}
+        <div className="w-full md:w-60 space-y-1 shrink-0">
+          <Card className="p-2 border border-slate-200/90 shadow-2xs">
+            <nav className="flex flex-col space-y-1">
+              {[
+                { id: 'notifications', label: 'Order Notifications', icon: Bell },
+                { id: 'privacy', label: 'Profile Visibility', icon: Globe },
+                { id: 'payments', label: 'Payout Protocol', icon: CreditCard },
+                { id: 'security', label: 'Security & Access', icon: Lock }
+              ].map(tab => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`w-full flex items-center px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-colors ${
+                      isActive 
+                        ? 'bg-[#2F5BEA] text-white shadow-2xs' 
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                    }`}
+                  >
+                    <Icon size={16} className="mr-2.5 shrink-0" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </Card>
         </div>
 
-        {/* Content */}
-        <div className="flex-1">
+        {/* Content Area */}
+        <div className="flex-1 min-w-0">
           <form onSubmit={handleSubmit(onSubmit)}>
             
             {activeTab === 'notifications' && (
-              <Card className="p-6 space-y-6">
+              <Card className="p-6 border border-slate-200/90 shadow-sm space-y-6">
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900 mb-4">Email Notifications</h2>
-                  <div className="space-y-4">
-                    <label className="flex items-start">
-                      <input type="checkbox" {...register("emailNotifications.newOrders")} className="mt-1 mr-3 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
+                  <h2 className="text-sm font-bold text-slate-900 mb-1">Email Order Notifications</h2>
+                  <p className="text-xs text-slate-500 mb-4">Choose which project lifecycle events trigger instant notifications.</p>
+                  
+                  <div className="space-y-3">
+                    <label className="flex items-start p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        {...register("emailNotifications.newOrders")} 
+                        className="mt-0.5 mr-3 w-4 h-4 text-[#2F5BEA] rounded border-slate-300 focus:ring-[#2F5BEA]" 
+                      />
                       <div>
-                        <span className="block text-sm font-medium text-slate-700">New Orders</span>
-                        <span className="block text-xs text-slate-500">Get notified when a client places a new order.</span>
+                        <span className="block text-xs font-semibold text-slate-800">New Deal Invitations</span>
+                        <span className="block text-[11px] text-slate-500">Alert me when a client starts a deal for one of my services.</span>
                       </div>
                     </label>
-                    <label className="flex items-start">
-                      <input type="checkbox" {...register("emailNotifications.messages")} className="mt-1 mr-3 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
+
+                    <label className="flex items-start p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        {...register("emailNotifications.payments")} 
+                        className="mt-0.5 mr-3 w-4 h-4 text-[#2F5BEA] rounded border-slate-300 focus:ring-[#2F5BEA]" 
+                      />
                       <div>
-                        <span className="block text-sm font-medium text-slate-700">Messages</span>
-                        <span className="block text-xs text-slate-500">Get notified when you receive a message from a client.</span>
+                        <span className="block text-xs font-semibold text-slate-800">Escrow Milestone Funding & Release</span>
+                        <span className="block text-[11px] text-slate-500">Alert me when funds are confirmed held or approved for payout.</span>
                       </div>
                     </label>
-                    <label className="flex items-start">
-                      <input type="checkbox" {...register("emailNotifications.payments")} className="mt-1 mr-3 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
+
+                    <label className="flex items-start p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        {...register("emailNotifications.reminders")} 
+                        className="mt-0.5 mr-3 w-4 h-4 text-[#2F5BEA] rounded border-slate-300 focus:ring-[#2F5BEA]" 
+                      />
                       <div>
-                        <span className="block text-sm font-medium text-slate-700">Payments & Escrow</span>
-                        <span className="block text-xs text-slate-500">Get notified when funds are released or withdrawn.</span>
-                      </div>
-                    </label>
-                    <label className="flex items-start">
-                      <input type="checkbox" {...register("emailNotifications.reminders")} className="mt-1 mr-3 w-4 h-4 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500" />
-                      <div>
-                        <span className="block text-sm font-medium text-slate-700">Delivery Reminders</span>
-                        <span className="block text-xs text-slate-500">Get reminders when an order deadline is approaching.</span>
+                        <span className="block text-xs font-semibold text-slate-800">Milestone Deadline Reminders</span>
+                        <span className="block text-[11px] text-slate-500">Receive reminders 48 hours before an agreed delivery deadline.</span>
                       </div>
                     </label>
                   </div>
                 </div>
-              </Card>
-            )}
 
-            {activeTab === 'security' && (
-              <Card className="p-6 space-y-6">
-                <h2 className="text-lg font-bold text-slate-900 mb-4">Change Password</h2>
-                <div className="space-y-4 max-w-md">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Current Password</label>
-                    <input type="password" placeholder="••••••••" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">New Password</label>
-                    <input type="password" placeholder="••••••••" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Confirm New Password</label>
-                    <input type="password" placeholder="••••••••" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
-                  </div>
+                <div className="pt-4 border-t border-slate-100 flex justify-end">
+                  <Button type="submit" variant="primary" size="sm" isLoading={isSaving} icon={<Save size={14} />}>
+                    Save Preferences
+                  </Button>
                 </div>
               </Card>
             )}
 
             {activeTab === 'privacy' && (
-              <Card className="p-6 space-y-6">
-                <h2 className="text-lg font-bold text-slate-900 mb-4">Visibility Settings</h2>
-                <div className="space-y-4">
-                  <label className="flex items-center justify-between">
-                    <div>
-                      <span className="block text-sm font-medium text-slate-700">Public Profile</span>
-                      <span className="block text-xs text-slate-500">Allow clients to find your profile in search results.</span>
-                    </div>
-                    <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                      <input type="checkbox" {...register("visibility.profilePublic")} className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-indigo-500 bg-indigo-500 right-0" />
-                      <label className="toggle-label block overflow-hidden h-5 rounded-full bg-indigo-500 cursor-pointer"></label>
-                    </div>
-                  </label>
+              <Card className="p-6 border border-slate-200/90 shadow-sm space-y-6">
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900 mb-1">Marketplace Visibility</h2>
+                  <p className="text-xs text-slate-500 mb-4">Control how your talent card and listings appear in public search results.</p>
                   
-                  <label className="flex items-center justify-between">
-                    <div>
-                      <span className="block text-sm font-medium text-slate-700">Available for Work</span>
-                      <span className="block text-xs text-slate-500">Show a badge indicating you are currently taking new orders.</span>
-                    </div>
-                    <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                      <input type="checkbox" {...register("visibility.availableForWork")} className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-indigo-500 bg-indigo-500 right-0" />
-                      <label className="toggle-label block overflow-hidden h-5 rounded-full bg-indigo-500 cursor-pointer"></label>
-                    </div>
-                  </label>
-                  
-                  <label className="flex items-center justify-between">
-                    <div>
-                      <span className="block text-sm font-medium text-slate-700">Show Earnings</span>
-                      <span className="block text-xs text-slate-500">Display your total earnings on your public profile.</span>
-                    </div>
-                    <div className="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
-                      <input type="checkbox" {...register("visibility.showEarnings")} className="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-slate-300 bg-slate-300 right-0" style={{ right: 'auto', left: 0 }} />
-                      <label className="toggle-label block overflow-hidden h-5 rounded-full bg-slate-300 cursor-pointer"></label>
-                    </div>
-                  </label>
+                  <div className="space-y-3">
+                    <label className="flex items-start p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        {...register("visibility.profilePublic")} 
+                        className="mt-0.5 mr-3 w-4 h-4 text-[#2F5BEA] rounded border-slate-300 focus:ring-[#2F5BEA]" 
+                      />
+                      <div>
+                        <span className="block text-xs font-semibold text-slate-800">Show Profile in Marketplace Search</span>
+                        <span className="block text-[11px] text-slate-500">Allow prospective clients to find your services and profile on WorkVault.</span>
+                      </div>
+                    </label>
+
+                    <label className="flex items-start p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        {...register("visibility.availableForWork")} 
+                        className="mt-0.5 mr-3 w-4 h-4 text-[#2F5BEA] rounded border-slate-300 focus:ring-[#2F5BEA]" 
+                      />
+                      <div>
+                        <span className="block text-xs font-semibold text-slate-800">Available for Immediate Orders</span>
+                        <span className="block text-[11px] text-slate-500">Displays "Open for Work" badge on all active service cards.</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex justify-end">
+                  <Button type="submit" variant="primary" size="sm" isLoading={isSaving} icon={<Save size={14} />}>
+                    Save Visibility
+                  </Button>
                 </div>
               </Card>
             )}
 
             {activeTab === 'payments' && (
-              <Card className="p-6 space-y-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-lg font-bold text-slate-900">Withdrawal Methods</h2>
-                  <Button variant="outline" size="sm">+ Add Method</Button>
+              <Card className="p-6 border border-slate-200/90 shadow-sm space-y-5">
+                <div className="border-b border-slate-100 pb-3">
+                  <h2 className="text-sm font-bold text-slate-900">Escrow Payout Routing</h2>
+                  <p className="text-xs text-slate-500">Payment settlement protocol for completed and released deals.</p>
                 </div>
-                
-                <div className="border border-slate-200 rounded-lg p-4 flex items-center justify-between bg-slate-50">
-                  <div className="flex items-center">
-                    <div className="w-12 h-8 bg-white border border-slate-200 rounded flex items-center justify-center font-bold text-slate-700 mr-4">
-                      Bank
-                    </div>
-                    <div>
-                      <p className="font-medium text-slate-900">HDFC Bank **** 1234</p>
-                      <p className="text-xs text-slate-500">Default &bull; Takes 1-3 business days</p>
-                    </div>
+
+                <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-200 text-xs text-blue-900 space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-blue-950">
+                    <ShieldCheck className="h-4 w-4 text-[#2F5BEA]" />
+                    <span>Verifiable Escrow Ledger Integration</span>
                   </div>
-                  <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700 hover:bg-red-50">Remove</Button>
+                  <p className="leading-relaxed">
+                    Released escrow balances are credited to your WorkVault balance upon client sign-off. Payouts are reconciled via Stripe Connect or local bank settlement upon verification.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-slate-800">Direct Bank Transfer (NEFT/RTGS)</p>
+                    <p className="text-[11px] text-slate-500">Settlements processed within 1-2 business days post release.</p>
+                  </div>
+                  <span className="px-2.5 py-1 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    Active Ledger
+                  </span>
                 </div>
               </Card>
             )}
 
-            {activeTab !== 'payments' && (
-              <div className="mt-6 flex justify-end">
-                <Button type="submit" className="flex items-center gap-2" disabled={isSaving}>
-                  <Save size={16} />
-                  {isSaving ? 'Saving...' : 'Save Settings'}
-                </Button>
+            {activeTab === 'security' && (
+              <div className="space-y-4">
+                <Card className="p-6 border border-slate-200/90 shadow-sm space-y-4">
+                  <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100 text-slate-900 font-bold text-sm">
+                    <KeyRound className="h-4.5 w-4.5 text-[#2F5BEA]" />
+                    <span>Credential Management</span>
+                  </div>
+                  
+                  <div className="p-4 rounded-xl bg-blue-50/60 border border-blue-200 text-xs text-blue-900 space-y-2">
+                    <p className="font-semibold text-blue-950">Password Policy Notice</p>
+                    <p className="leading-relaxed">
+                      Self-service password rotation is not active on this development instance. If you need to reset passwords for test accounts, please contact the local administrator at <span className="font-mono font-semibold">admin@workvault.local</span>.
+                    </p>
+                  </div>
+                </Card>
               </div>
             )}
           </form>
