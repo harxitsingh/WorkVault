@@ -8,7 +8,7 @@ const adminSidebarItems = [
   { label: 'Services', icon: Package, to: '/admin/services' },
   { label: 'Deals', icon: Handshake, to: '/admin/deals' },
   { label: 'Payments', icon: CreditCard, to: '/admin/payments' },
-  { label: 'Disputes', icon: AlertTriangle, to: '/admin/disputes', badge: '4' },
+  { label: 'Disputes', icon: AlertTriangle, to: '/admin/disputes' },
   { label: 'Reviews', icon: Star, to: '/admin/reviews' },
   { label: 'Reports', icon: BarChart3, to: '/admin/reports' },
   { label: 'Settings', icon: Settings, to: '/admin/settings' },

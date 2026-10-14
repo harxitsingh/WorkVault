@@ -5,10 +5,10 @@ import DashboardLayout from './DashboardLayout';
 const clientSidebarItems = [
   { label: 'Overview', icon: LayoutDashboard, to: '/client/dashboard' },
   { label: 'Browse Services', icon: Search, to: '/services' },
-  { label: 'My Deals', icon: Handshake, to: '/client/deals', badge: '2' },
+  { label: 'My Deals', icon: Handshake, to: '/client/deals' },
   { label: 'Disputes', icon: AlertTriangle, to: '/client/disputes' },
   { label: 'Payments', icon: CreditCard, to: '/client/payments' },
-  { label: 'Notifications', icon: Bell, to: '/client/notifications', badge: '5' },
+  { label: 'Notifications', icon: Bell, to: '/client/notifications' },
   { label: 'Profile', icon: User, to: '/client/profile' },
   { label: 'Settings', icon: Settings, to: '/client/settings' },
 ];
