@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Menu, Bell, Search, User, Settings, LogOut, ChevronDown, LayoutDashboard } from 'lucide-react';
+import { Menu, Bell, Search, User, Settings, LogOut, ChevronDown, LayoutDashboard, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useUI } from '../../context/UIContext';
 import Avatar from '../common/Avatar';
@@ -8,7 +8,7 @@ import { notificationService } from '../../services/notificationService';
 
 const DashboardHeader = ({ title = 'Dashboard', subtitle }) => {
   const { user, logout } = useAuth();
-  const { toggleSidebar } = useUI();
+  const { toggleSidebar, theme, toggleTheme } = useUI();
   const [unreadCount, setUnreadCount] = useState(0);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
@@ -73,7 +73,22 @@ const DashboardHeader = ({ title = 'Dashboard', subtitle }) => {
         </div>
 
         {/* Right: Quick actions, notifications, and profile */}
-        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Theme Toggle Button */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA]"
+          >
+            {theme === 'dark' ? (
+              <Sun className="h-5 w-5 text-amber-400 hover:text-amber-300" aria-hidden="true" />
+            ) : (
+              <Moon className="h-5 w-5 text-slate-600 hover:text-slate-900" aria-hidden="true" />
+            )}
+          </button>
+
           {/* Notifications */}
           <Link 
             to={user?.role ? `/${user.role}/notifications` : '/login'}
@@ -140,6 +155,24 @@ const DashboardHeader = ({ title = 'Dashboard', subtitle }) => {
                   >
                     <Settings className="h-4 w-4 mr-2.5 text-slate-400" /> Account Settings
                   </Link>
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    role="menuitem"
+                    className="flex items-center justify-between w-full px-4 py-2 text-xs font-medium hover:bg-slate-50 hover:text-[#2F5BEA] transition-colors text-left"
+                  >
+                    <span className="flex items-center">
+                      {theme === 'dark' ? (
+                        <Sun className="h-4 w-4 mr-2.5 text-amber-400" />
+                      ) : (
+                        <Moon className="h-4 w-4 mr-2.5 text-slate-400" />
+                      )}
+                      <span>Theme</span>
+                    </span>
+                    <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                      {theme === 'dark' ? 'Dark' : 'Light'}
+                    </span>
+                  </button>
                 </div>
 
                 <div className="border-t border-slate-100 pt-1">

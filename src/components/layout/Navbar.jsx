@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShieldCheck, Menu, X, LayoutDashboard, User, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { ShieldCheck, Menu, X, LayoutDashboard, User, Settings, LogOut, ChevronDown, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useUI } from '../../context/UIContext';
 import Button from '../common/Button';
 import Avatar from '../common/Avatar';
 
@@ -10,6 +11,7 @@ const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useUI();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -75,6 +77,21 @@ const Navbar = () => {
 
           {/* Right Side (Desktop) */}
           <div className="hidden md:flex items-center space-x-3">
+            {/* Theme Toggle Button */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA]"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-5 w-5 text-amber-400 hover:text-amber-300" aria-hidden="true" />
+              ) : (
+                <Moon className="h-5 w-5 text-slate-600 hover:text-slate-900" aria-hidden="true" />
+              )}
+            </button>
+
             {!user ? (
               <>
                 <Link to="/login">
@@ -140,6 +157,24 @@ const Navbar = () => {
                       >
                         <Settings className="h-4 w-4 mr-2.5 text-slate-400" /> Account Settings
                       </Link>
+                      <button
+                        type="button"
+                        onClick={toggleTheme}
+                        role="menuitem"
+                        className="flex items-center justify-between w-full px-4 py-2 text-xs font-medium hover:bg-slate-50 hover:text-[#2F5BEA] transition-colors text-left"
+                      >
+                        <span className="flex items-center">
+                          {theme === 'dark' ? (
+                            <Sun className="h-4 w-4 mr-2.5 text-amber-400" />
+                          ) : (
+                            <Moon className="h-4 w-4 mr-2.5 text-slate-400" />
+                          )}
+                          <span>Theme</span>
+                        </span>
+                        <span className="text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
+                          {theme === 'dark' ? 'Dark' : 'Light'}
+                        </span>
+                      </button>
                     </div>
 
                     <div className="border-t border-slate-100 pt-1">
@@ -157,8 +192,21 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          {/* Mobile menu and theme buttons */}
+          <div className="md:hidden flex items-center space-x-1">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5BEA]"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-5 w-5 text-amber-400" aria-hidden="true" />
+              ) : (
+                <Moon className="h-5 w-5 text-slate-600" aria-hidden="true" />
+              )}
+            </button>
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               aria-label="Open mobile menu"

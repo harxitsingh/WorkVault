@@ -53,16 +53,31 @@ export const statsService = {
 
   uploadFile: async (file, categoryOrField = 'general') => {
     try {
+      if (!file) {
+        throw new Error('Please select a file to upload');
+      }
+
       const formData = new FormData();
-      formData.append('image', file);
+      // Match field name expected by backend: 'avatar', 'service_images', 'deliverable', 'image', 'file'
+      const fieldName = categoryOrField === 'avatar'
+        ? 'avatar'
+        : (categoryOrField === 'service_images' || categoryOrField === 'service'
+            ? 'service_images'
+            : (categoryOrField === 'deliverable' ? 'deliverable' : 'image'));
+      formData.append(fieldName, file);
+
       // If service_images is passed as upload field/type, map to valid category 'service'
       const category = (categoryOrField === 'service_images' || categoryOrField === 'service')
         ? 'service'
         : categoryOrField;
       formData.append('category', category);
 
-      const response = await api.post('/upload', formData);
-      const data = response.data.data;
+      const response = await api.post('/upload', formData, {
+        headers: {
+          'Content-Type': undefined
+        }
+      });
+      const data = response.data?.data;
       if (data) {
         data.url = data.fullUrl || data.url || data.fileUrl;
       }

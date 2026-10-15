@@ -67,9 +67,9 @@ export default function ClientProfile() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
-      toast.error('Only JPG, PNG, and WEBP image formats are supported.');
+      toast.error('Only JPG, PNG, WEBP, and GIF image formats are supported.');
       return;
     }
 
@@ -96,11 +96,17 @@ export default function ClientProfile() {
   };
 
   const handleSaveAvatar = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      toast.error('Please select an image file first.');
+      return;
+    }
     setUploadingAvatar(true);
     try {
       const uploadRes = await statsService.uploadFile(selectedFile, 'avatar');
       const newUrl = uploadRes.url || uploadRes.fileUrl;
+      if (!newUrl) {
+        throw new Error('Image URL not returned by server');
+      }
       const userId = user?.id || user?._id || 'me';
       const updatedUser = await userService.updateUser(userId, {
         avatar: newUrl,
@@ -145,7 +151,7 @@ export default function ClientProfile() {
                   type="file"
                   ref={fileInputRef}
                   onChange={handleFileChange}
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
                   className="hidden"
                   aria-label="Upload profile image"
                 />

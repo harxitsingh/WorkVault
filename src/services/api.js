@@ -1,12 +1,28 @@
 import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const api = axios.create({ baseURL: API_BASE_URL, headers: { 'Content-Type': 'application/json' } });
+const api = axios.create({ baseURL: API_BASE_URL });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('workvault_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // When sending FormData, remove Content-Type so browser/axios sets multipart boundary
+  if (config.data instanceof FormData) {
+    if (config.headers) {
+      if (typeof config.headers.delete === 'function') {
+        config.headers.delete('Content-Type');
+        config.headers.delete('content-type');
+      } else {
+        delete config.headers['Content-Type'];
+        delete config.headers['content-type'];
+      }
+    }
+  } else if (config.headers && !config.headers['Content-Type'] && !config.headers['content-type']) {
+    config.headers['Content-Type'] = 'application/json';
+  }
+
   return config;
 });
 

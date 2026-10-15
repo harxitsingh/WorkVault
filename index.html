@@ -6,6 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WorkVault — Freelance Marketplace & Secure Payments</title>
     <meta name="description" content="WorkVault connects you with skilled freelancers and keeps your payments secure with escrow-style protection." />
+    <script>
+      (function() {
+        try {
+          const theme = localStorage.getItem('workvault_theme');
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'light');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body class="antialiased">
     <div id="root"></div>

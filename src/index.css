@@ -110,3 +110,189 @@ body {
   background-color: #0E1525;
   color: #F8FAFC;
 }
+
+/* ═════════════════════════════════════════════════════════════════════
+   DARK THEME SYSTEM
+   Applies instantly when <html class="dark"> or [data-theme="dark"].
+   Preserves light theme exactly when dark class is absent.
+   ═════════════════════════════════════════════════════════════════════ */
+html.dark,
+:root[data-theme="dark"] {
+  --color-bg-app: #0B1120;
+  --color-surface: #1E293B;
+  --color-surface-hover: #273549;
+  --color-border-subtle: #334155;
+  --color-border-strong: #475569;
+  --color-text-strong: #F8FAFC;
+  --color-text-default: #E2E8F0;
+  --color-text-muted: #94A3B8;
+
+  color-scheme: dark;
+}
+
+html.dark {
+  background-color: #0B1120;
+  color: #E2E8F0;
+}
+
+html.dark body {
+  background-color: #0B1120;
+  color: #E2E8F0;
+}
+
+/* Layouts & Surface Backgrounds */
+html.dark .bg-\[\#F8FAFC\],
+html.dark .bg-slate-50,
+html.dark .bg-gray-50 {
+  background-color: #0B1120 !important;
+}
+
+html.dark .bg-white {
+  background-color: #1E293B !important;
+}
+
+html.dark .bg-white\/95,
+html.dark .bg-white\/90,
+html.dark .bg-white\/80 {
+  background-color: rgba(30, 41, 59, 0.95) !important;
+}
+
+html.dark .bg-slate-50\/50,
+html.dark .bg-gray-50\/50 {
+  background-color: #162032 !important;
+}
+
+html.dark .bg-slate-100,
+html.dark .bg-gray-100 {
+  background-color: #273549 !important;
+}
+
+html.dark .bg-slate-200,
+html.dark .bg-gray-200 {
+  background-color: #334155 !important;
+  color: #E2E8F0 !important;
+}
+
+/* Interactive States & Hovers */
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-gray-50:hover,
+html.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-gray-100:hover {
+  background-color: #273549 !important;
+}
+
+html.dark .hover\:bg-slate-200:hover,
+html.dark .hover\:bg-gray-200:hover,
+html.dark .hover\:bg-slate-300:hover {
+  background-color: #3B4B61 !important;
+}
+
+/* Borders & Dividers */
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-200\/60,
+html.dark .border-slate-200\/80,
+html.dark .border-slate-200\/90,
+html.dark .border-slate-300,
+html.dark .border-gray-100,
+html.dark .border-gray-200,
+html.dark .border-gray-300 {
+  border-color: #334155 !important;
+}
+
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #334155 !important;
+}
+
+/* Typography Hierarchy */
+html.dark .text-slate-900,
+html.dark .text-gray-900 {
+  color: #F8FAFC !important;
+}
+
+html.dark .text-slate-800,
+html.dark .text-gray-800 {
+  color: #F1F5F9 !important;
+}
+
+html.dark .text-slate-700,
+html.dark .text-gray-700 {
+  color: #E2E8F0 !important;
+}
+
+html.dark .text-slate-600,
+html.dark .text-gray-600 {
+  color: #CBD5E1 !important;
+}
+
+html.dark .text-slate-500,
+html.dark .text-gray-500 {
+  color: #94A3B8 !important;
+}
+
+html.dark .text-slate-400,
+html.dark .text-gray-400 {
+  color: #94A3B8 !important;
+}
+
+/* Form Controls */
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]):not([type="file"]),
+html.dark textarea,
+html.dark select {
+  background-color: #162032 !important;
+  border-color: #334155 !important;
+  color: #F8FAFC !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748B !important;
+}
+
+html.dark select option {
+  background-color: #1E293B !important;
+  color: #F8FAFC !important;
+}
+
+html.dark label {
+  color: #E2E8F0 !important;
+}
+
+/* Data Tables */
+html.dark table thead tr th {
+  background-color: #162032 !important;
+  color: #94A3B8 !important;
+  border-color: #334155 !important;
+}
+
+html.dark table tbody tr td {
+  color: #E2E8F0 !important;
+  border-color: #334155 !important;
+}
+
+/* Modals, Dropdowns & Overlays */
+html.dark [role="dialog"] > div.bg-white,
+html.dark [role="menu"],
+html.dark [role="listbox"] {
+  background-color: #1E293B !important;
+  border-color: #334155 !important;
+  color: #E2E8F0 !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Glassmorphic Panels & Scrollbars */
+html.dark .glass-panel {
+  background: rgba(30, 41, 59, 0.85) !important;
+  border-color: rgba(51, 65, 85, 0.8) !important;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
