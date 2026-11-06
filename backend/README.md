@@ -1,7 +1,6 @@
 # WorkVault — Backend & Database Phase
 
-REST API for the WorkVault freelance marketplace with escrow-style deal workflow, powered by **Node.js, Express, MongoDB, and Mongoose**.
-
+REST API for the WorkVault freelance marketplace with escrow-style deal workflow, powered by **Node.js, Express, MongoDB  and Mongoose**.
 ---
 
 ## Architecture
